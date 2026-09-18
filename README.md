@@ -12,7 +12,7 @@
 >    macOS now lists the pad as a G7.
 > 3. Hold **B** and the **Xbox button** together for about five seconds. The Xbox light goes off
 >    for a second, then comes back on. macOS now lists the pad as an Xbox controller.
-> 4. Pair it in System Settings › Bluetooth like any Xbox controller. Vibration works.
+> 4. Finish the pairing. Now it'll act like a regular Bluetooth Xbox controller. Vibration works.
 >
 > If the pad already pairs as an Xbox controller, stop here. Everything below is the long way round.
 > We keep the app and the write-up for the record: the database mechanism, the numbering rule, and
