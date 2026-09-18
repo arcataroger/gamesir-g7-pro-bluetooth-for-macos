@@ -377,7 +377,7 @@ struct PermissionView: View {
         else if wiz.permissionRequested {
           Status(.wait, "Waiting for you to turn it on.")
           Text("In macOS's prompt choose Open System Settings, turn on the switch next to this app, then quit and reopen this app. It will continue from here.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 560, alignment: .leading)
-          Button("Quit now") { NSApp.terminate(nil) }.controlSize(.large)
+          Button("Allow Input Monitoring…") { wiz.requestPermission() }.buttonStyle(.borderedProminent).controlSize(.large)
         } else {
           Button("Ask again") { wiz.requestPermission() }.controlSize(.large)
         }
