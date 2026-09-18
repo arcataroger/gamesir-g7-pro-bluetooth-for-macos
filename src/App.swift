@@ -116,8 +116,8 @@ final class Wizard: ObservableObject {
 
   // MARK: permission + HID
   func requestPermission() {
+    // Just ask. macOS shows its own prompt with an "Open System Settings" button; the 1 s poll picks up the result.
     inputMonitoring = HIDSource.requestInputMonitoring()
-    if !inputMonitoring { SystemState.openInputMonitoringSettings() }
     refreshPermission()
   }
   func refreshPermission() { inputMonitoring = HIDSource.hasInputMonitoring(); if inputMonitoring { startHID() }; advanceIfDone() }
@@ -352,7 +352,7 @@ struct PermissionView: View {
         if wiz.inputMonitoring { Status(.ok, "Input Monitoring is allowed. You can continue.") }
         else {
           Button("Allow Input Monitoring…") { wiz.requestPermission() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).controlSize(.large)
-          Text("macOS asks the first time. If nothing appears, the Input Monitoring settings open instead: turn on the switch next to this app. This page updates by itself.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 560, alignment: .leading)
+          Text("macOS will ask. Choose Open System Settings in its prompt, turn on the switch next to this app, and come back. This page updates by itself.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 560, alignment: .leading)
         }
         HeroPad(lit: wiz.inputMonitoring)
       }
