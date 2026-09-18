@@ -42,7 +42,7 @@ Apple introduced the database this relies on.
 | Find the pad | Waits for the G7 Pro over Bluetooth and reads its firmware version, which the database entry must match. |
 | Capture | Asks for each control in turn and records what the pad actually sends. Sticks and D-pad included. |
 | Review | Computes the index macOS will use for every control (see *How it works*) and writes the personality file. |
-| Install | Runs the bundled `g7pro install` as admin: patches the database, installs the personality, restarts the controller daemon. Backs up the original plist first. |
+| Install | Runs the bundled `g7pro install` as admin: patches the database, installs the personality, restarts the controller daemon. Backs up the original plist first. An option (on by default) makes the pad self-identify as an Xbox One controller so games draw Xbox button glyphs; it may not apply in every game or in Steam Input. |
 | Verify | Press everything. Green = macOS delivered the right control to apps. Red = it delivered something else, with the name of what it saw. |
 | Finish | Reminds you to re-enable SIP. Offers uninstall. |
 
@@ -88,6 +88,11 @@ Two things had to be discovered to make the entry work:
    and so on. Copying the X3's numbers therefore scrambled everything past A. The app computes the
    index from the pad's real element list, so it holds for any firmware and would for other composite
    pads too.
+
+The personality's `ProductCategory` is what games see as the controller type. Apple's daemon honours
+"Xbox One" here for a third-party entry, so the wizard sets it by default and games show Xbox glyphs.
+Rumble is not possible in Bluetooth mode: the pad's descriptor has no force-feedback output, so a game
+that assumes an Xbox pad rumbles will simply get nothing. Wired mode has rumble.
 
 The Xbox button is sent as a Consumer Control "AC Home" key and is handled by macOS as the system
 button outside the personality. Share is sent as a keyboard PrintScreen keystroke and cannot be

@@ -32,12 +32,14 @@ case "status":
   seen = GCController.controllers().first
   var waited = 0.0; while seen == nil && waited < 6 { RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.25)); waited += 0.25 }
   NotificationCenter.default.removeObserver(obs)
-  print("Framework:  \(seen.map { "sees \($0.vendorName ?? "?") (extendedGamepad: \($0.extendedGamepad != nil))" } ?? "does not see the pad (waited 6 s)")")
+  print("Framework:  \(seen.map { "sees \($0.vendorName ?? "?") as \"\($0.productCategory)\" (extendedGamepad: \($0.extendedGamepad != nil))" } ?? "does not see the pad (waited 6 s)")")
 case "install":
   let pers = URL(fileURLWithPath: opt("--personality") ?? root.appendingPathComponent(device.personalityTemplate).path)
   let version = opt("--version").flatMap(Int.init) ?? Database.padVersion(vendorID: device.vendorID, productID: device.productID)
   guard let version = version else { print("No pad connected and no --version given. Connect the pad over Bluetooth or pass --version N."); exit(1) }
-  let backup = URL(fileURLWithPath: opt("--backup-dir") ?? (NSHomeDirectory() + "/Library/Application Support/G7Pro Bluetooth Setup/backup"))
+  // Under sudo, NSHomeDirectory() is root's; keep backups in the invoking user's home.
+  let home = ProcessInfo.processInfo.environment["SUDO_USER"].flatMap { getpwnam($0).map { String(cString: $0.pointee.pw_dir) } } ?? NSHomeDirectory()
+  let backup = URL(fileURLWithPath: opt("--backup-dir") ?? (home + "/Library/Application Support/G7Pro Bluetooth Setup/backup"))
   do { print(try Database.install(device: device, version: version, personality: pers, backupDir: backup)) } catch { print("error: \(error.localizedDescription)"); exit(1) }
 case "uninstall":
   do { print(try Database.uninstall(device: device)) } catch { print("error: \(error.localizedDescription)"); exit(1) }

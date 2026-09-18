@@ -74,6 +74,8 @@ final class Wizard: ObservableObject {
   @Published var entryInstalled = false      // the database already has an entry for this pad
   @Published var permissionRequested = false // after asking once, nothing changes until the app is relaunched
   @Published var uninstallMode = false       // the red rail item: a screen of its own, outside the step sequence
+  @Published var xboxIdentity = true { didSet { if step == .install || step == .review { writePersonality() } } }
+  @Published var reportedCategory: String? = nil   // what macOS says the pad is, after install
 
   let device: DeviceSpec
   let controls: [ControlSpec]
@@ -104,7 +106,7 @@ final class Wizard: ObservableObject {
     if controls.isEmpty { errorText = "Could not load data/controls.json next to the app. Reinstall the app." }
     refreshSystem()
     Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in self?.refreshSystem() }
-    FrameworkObserver.shared.onConnection = { [weak self] on in self?.frameworkSeesPad = on; self?.advanceIfDone() }
+    FrameworkObserver.shared.onConnection = { [weak self] on in self?.frameworkSeesPad = on; self?.reportedCategory = on ? FrameworkObserver.shared.reportedCategory : nil; self?.advanceIfDone() }
     FrameworkObserver.shared.onElement = { [weak self] name, dir in self?.frameworkEvent(name, dir) }
     FrameworkObserver.shared.onAnalog = { [weak self] name, value, x, y in
       guard let self, self.step == .verify else { return }
@@ -262,11 +264,12 @@ final class Wizard: ObservableObject {
   private func hatDir(for id: String) -> String { controls.first { $0.id == id }?.gcDir ?? "" }
 
   // MARK: review + write
-  func review() {
-    step = .review
+  func review() { step = .review; writePersonality() }
+  func writePersonality() {
     let template = resourceRoot.appendingPathComponent(device.personalityTemplate)
     do {
-      let (data, ch) = try PersonalityWriter.build(template: template, captures: captures, elements: HIDSource.shared.elements, controls: controls, productName: "GameSir-G7 Pro")
+      let (data, ch) = try PersonalityWriter.build(template: template, captures: captures, elements: HIDSource.shared.elements, controls: controls,
+                                                    productName: "GameSir-G7 Pro", productCategory: xboxIdentity ? "Xbox One" : "HID")
       try data.write(to: personalityURL)
       changes = ch
       indexTable = captures.compactMap { cap in
@@ -553,10 +556,14 @@ struct InstallView: View {
     Page(wiz.installed ? "Installed" : "Add the pad to Apple's controller list", wiz.installed ? nil : "This writes the entry and your mapping into the system database and restarts the controller service. macOS asks for an administrator password.") {
       VStack(alignment: .leading, spacing: 18) {
         if wiz.installed {
-          Status(wiz.frameworkSeesPad ? .ok : .wait, wiz.frameworkSeesPad ? "Installed. macOS reports the pad as a game controller. You can continue." : "Installed. Waiting for macOS to pick the pad up…")
+          Status(wiz.frameworkSeesPad ? .ok : .wait, wiz.frameworkSeesPad ? "Installed. macOS reports the pad as a game controller (\(wiz.reportedCategory ?? "category unknown")). You can continue." : "Installed. Waiting for macOS to pick the pad up…")
         } else if wiz.sipEnabled == true {
           Status(.warn, "System Integrity Protection is on, so the write would be refused. Turn it off (Welcome explains how) and reopen the app; your capture is saved.")
         } else {
+          VStack(alignment: .leading, spacing: 4) {
+            Toggle(isOn: $wiz.xboxIdentity) { Text("Try to self-identify as an Xbox One controller so games show the right glyphs.").font(.system(size: 17)) }.toggleStyle(.checkbox)
+            Text("May not work in all games, or in Steam Input.").font(.system(size: 14)).foregroundStyle(.secondary).padding(.leading, 22)
+          }
           Button(action: { wiz.install() }) {
             HStack(spacing: 12) {
               if wiz.installing { ProgressView().controlSize(.small) } else { Image(systemName: "arrow.down.circle.fill").font(.system(size: 24)) }

@@ -159,7 +159,7 @@ enum PersonalityWriter {
   struct Change { let ident: String; let from: String; let to: String }
 
   /// Returns the rewritten plist and the list of predicate changes. Elements not captured keep the template's value.
-  static func build(template: URL, captures: [Capture], elements: [ElementInfo], controls: [ControlSpec], productName: String)
+  static func build(template: URL, captures: [Capture], elements: [ElementInfo], controls: [ControlSpec], productName: String, productCategory: String? = nil)
     throws -> (Data, [Change]) {
     var plist = try PropertyListSerialization.propertyList(from: Data(contentsOf: template), format: nil) as! [String: Any]
     var model = plist["Model"] as! [String: Any]; var driver = model["Driver"] as! [String: Any]
@@ -173,7 +173,9 @@ enum PersonalityWriter {
       let old = els[i]["Predicate"] as? String ?? ""
       if old != pred { changes.append(Change(ident: ctl.ident, from: old, to: pred)); els[i]["Predicate"] = pred }
     }
-    driver["Elements"] = els; model["Driver"] = driver; model["ProductName"] = productName; plist["Model"] = model
+    driver["Elements"] = els; model["Driver"] = driver; model["ProductName"] = productName
+    if let cat = productCategory { model["ProductCategory"] = cat }   // e.g. "Xbox One" so games draw Xbox glyphs
+    plist["Model"] = model
     return (try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0), changes)
   }
 }
@@ -187,6 +189,7 @@ final class FrameworkObserver {
   var onRelease: ((String) -> Void)?               // element name when a button is released or a pad/stick returns to centre
   var onConnection: ((Bool) -> Void)?
   private(set) var controller: GCController?
+  var reportedCategory: String? { controller?.productCategory }
   private var token: NSObjectProtocol?, token2: NSObjectProtocol?
 
   func start() {
