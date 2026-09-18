@@ -150,6 +150,15 @@ final class Wizard: ObservableObject {
   // MARK: capture
   func beginCapture() { captures = []; currentIndex = 0; step = .capture }
   private func rawEvent(_ ev: RawEvent) {
+    if step == .verify {
+      if ev.usagePage == 12 && ev.usage == 0x223 {          // AC Home = Xbox button
+        if ev.value != 0 { verifyLit = "home"; verifyLitDir = nil; lastFrameworkText = "Xbox button. macOS keeps this as the system button (it opens the Game Overlay); games don't receive it." }
+        else if verifyLit == "home" { verifyLit = nil }
+      } else if ev.usagePage == 7 && ev.usage == 0x46 {     // keyboard PrintScreen = Share
+        if ev.value != 0 { verifyLit = "share"; verifyLitDir = nil; lastFrameworkText = "Share. The pad sends this as a keyboard keystroke, not a gamepad button, so games don't see it." }
+        else if verifyLit == "share" { verifyLit = nil }
+      }
+    }
     if let other = ev.describeOther, ev.value != 0 { lastRawText = other }
     else if ev.usageType != 0 && (ev.usageType != 2 || ev.value < 48 || ev.value > 208) && ev.value != 0 {
       lastRawText = "usage page \(ev.usagePage) usage \(ev.usage) value \(ev.value)"
@@ -462,10 +471,10 @@ struct VerifyView: View {
         ControllerView(target: nil, lit: wiz.verifyLit, litDir: wiz.verifyLitDir, captured: [], ok: [], bad: [:], showTargets: true) { _ in }
           .frame(maxWidth: 900)
         HStack(spacing: 18) {
-          Text(wiz.lastFrameworkText.isEmpty ? "Waiting for a press…" : "macOS saw: \(wiz.lastFrameworkText)").font(.system(size: 20, weight: .semibold))
+          Text(wiz.lastFrameworkText.isEmpty ? "Waiting for a press…" : (wiz.lastFrameworkText.contains(".") ? wiz.lastFrameworkText : "macOS saw: \(wiz.lastFrameworkText)")).font(.system(size: 20, weight: .semibold)).frame(maxWidth: 900, alignment: .leading)
           if !wiz.frameworkSeesPad { Status(.warn, "macOS isn't reporting the pad as a game controller right now.") }
         }
-        Text("If something lights up in the wrong place, go back to Capture and press that control again.").font(.system(size: 16)).foregroundStyle(.secondary)
+        Text("If something lights up in the wrong place, go back to Capture and press that control again. The Xbox and Share buttons and M are handled by macOS or the pad itself and never reach games.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 900, alignment: .leading)
       }
     } footer: {
       HStack { Button("Back") { wiz.back(.install) }; Button("Capture again") { wiz.autoAdvance = false; wiz.step = .capture }; Spacer(); Button("Next") { wiz.step = .done }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent) }.controlSize(.large)
@@ -639,7 +648,10 @@ struct ControllerView: View {
     let ids = Set(sibs.map { $0.id })
     let bg = scheme == .dark ? Color.black : Color.white
     if let t = target, ids.contains(t) { return S(fill: .accentColor.opacity(0.45), stroke: .accentColor, width: 2.5, text: .white) }
-    if let l = lit, ids.contains(l) { return S(fill: .accentColor.opacity(0.45), stroke: .accentColor, width: 2.5, text: .white) }
+    if let l = lit, ids.contains(l) {
+      if sibs.allSatisfy({ !$0.isMappable }) { return S(fill: .secondary.opacity(0.35), stroke: .secondary, width: 2, text: .primary) }
+      return S(fill: .accentColor.opacity(0.45), stroke: .accentColor, width: 2.5, text: .white)
+    }
     if !ids.isDisjoint(with: Set(bad.keys)) { return S(fill: .red.opacity(0.5), stroke: .red, width: 2, text: .white) }
     if !ids.isDisjoint(with: ok) { return S(fill: .green.opacity(0.35), stroke: .green, width: 2, text: .white, check: true) }
     // captured: recede into the background and mark done
