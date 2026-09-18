@@ -1,0 +1,1977 @@
+{
+  "device" : "GameSir G7 Pro (Bluetooth mode)",
+  "elements" : [
+    {
+      "cookie" : 17,
+      "reportID" : 2,
+      "usage" : 234,
+      "usagePage" : 12
+    },
+    {
+      "cookie" : 18,
+      "reportID" : 2,
+      "usage" : 205,
+      "usagePage" : 12
+    },
+    {
+      "cookie" : 19,
+      "reportID" : 2,
+      "usage" : 182,
+      "usagePage" : 12
+    },
+    {
+      "cookie" : 20,
+      "reportID" : 2,
+      "usage" : 181,
+      "usagePage" : 12
+    },
+    {
+      "cookie" : 21,
+      "reportID" : 2,
+      "usage" : 233,
+      "usagePage" : 12
+    },
+    {
+      "cookie" : 22,
+      "reportID" : 2,
+      "usage" : 184,
+      "usagePage" : 12
+    },
+    {
+      "cookie" : 23,
+      "reportID" : 2,
+      "usage" : 149,
+      "usagePage" : 12
+    },
+    {
+      "cookie" : 24,
+      "reportID" : 2,
+      "usage" : 547,
+      "usagePage" : 12
+    },
+    {
+      "cookie" : 25,
+      "reportID" : 2,
+      "usage" : 548,
+      "usagePage" : 12
+    },
+    {
+      "cookie" : 26,
+      "reportID" : 2,
+      "usage" : 64,
+      "usagePage" : 12
+    },
+    {
+      "cookie" : 27,
+      "reportID" : 2,
+      "usage" : 183,
+      "usagePage" : 12
+    },
+    {
+      "cookie" : 28,
+      "reportID" : 2,
+      "usage" : 226,
+      "usagePage" : 12
+    },
+    {
+      "cookie" : 330,
+      "reportID" : 7,
+      "usage" : 48,
+      "usagePage" : 1
+    },
+    {
+      "cookie" : 331,
+      "reportID" : 7,
+      "usage" : 49,
+      "usagePage" : 1
+    },
+    {
+      "cookie" : 332,
+      "reportID" : 7,
+      "usage" : 50,
+      "usagePage" : 1
+    },
+    {
+      "cookie" : 333,
+      "reportID" : 7,
+      "usage" : 53,
+      "usagePage" : 1
+    },
+    {
+      "cookie" : 29,
+      "reportID" : 7,
+      "usage" : 1,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 30,
+      "reportID" : 7,
+      "usage" : 2,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 31,
+      "reportID" : 7,
+      "usage" : 3,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 32,
+      "reportID" : 7,
+      "usage" : 4,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 33,
+      "reportID" : 7,
+      "usage" : 5,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 34,
+      "reportID" : 7,
+      "usage" : 6,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 35,
+      "reportID" : 7,
+      "usage" : 7,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 36,
+      "reportID" : 7,
+      "usage" : 8,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 37,
+      "reportID" : 7,
+      "usage" : 9,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 38,
+      "reportID" : 7,
+      "usage" : 10,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 39,
+      "reportID" : 7,
+      "usage" : 11,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 40,
+      "reportID" : 7,
+      "usage" : 12,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 41,
+      "reportID" : 7,
+      "usage" : 13,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 42,
+      "reportID" : 7,
+      "usage" : 14,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 43,
+      "reportID" : 7,
+      "usage" : 15,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 44,
+      "reportID" : 7,
+      "usage" : 16,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 334,
+      "reportID" : 7,
+      "usage" : 57,
+      "usagePage" : 1
+    },
+    {
+      "cookie" : 335,
+      "reportID" : 7,
+      "usage" : 196,
+      "usagePage" : 2
+    },
+    {
+      "cookie" : 336,
+      "reportID" : 7,
+      "usage" : 197,
+      "usagePage" : 2
+    },
+    {
+      "cookie" : 45,
+      "reportID" : 1,
+      "usage" : 224,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 46,
+      "reportID" : 1,
+      "usage" : 225,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 47,
+      "reportID" : 1,
+      "usage" : 226,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 48,
+      "reportID" : 1,
+      "usage" : 227,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 49,
+      "reportID" : 1,
+      "usage" : 228,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 50,
+      "reportID" : 1,
+      "usage" : 229,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 51,
+      "reportID" : 1,
+      "usage" : 230,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 52,
+      "reportID" : 1,
+      "usage" : 231,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 53,
+      "reportID" : 1,
+      "usage" : 4294967295,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 54,
+      "reportID" : 1,
+      "usage" : 4294967295,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 55,
+      "reportID" : 1,
+      "usage" : 4294967295,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 56,
+      "reportID" : 1,
+      "usage" : 4294967295,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 57,
+      "reportID" : 1,
+      "usage" : 4294967295,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 58,
+      "reportID" : 1,
+      "usage" : 4294967295,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 59,
+      "reportID" : 1,
+      "usage" : 4294967295,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 60,
+      "reportID" : 1,
+      "usage" : 4294967295,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 61,
+      "reportID" : 1,
+      "usage" : 4294967295,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 62,
+      "reportID" : 1,
+      "usage" : 4294967295,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 63,
+      "reportID" : 1,
+      "usage" : 4294967295,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 64,
+      "reportID" : 1,
+      "usage" : 0,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 65,
+      "reportID" : 1,
+      "usage" : 1,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 66,
+      "reportID" : 1,
+      "usage" : 2,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 67,
+      "reportID" : 1,
+      "usage" : 3,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 68,
+      "reportID" : 1,
+      "usage" : 4,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 69,
+      "reportID" : 1,
+      "usage" : 5,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 70,
+      "reportID" : 1,
+      "usage" : 6,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 71,
+      "reportID" : 1,
+      "usage" : 7,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 72,
+      "reportID" : 1,
+      "usage" : 8,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 73,
+      "reportID" : 1,
+      "usage" : 9,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 74,
+      "reportID" : 1,
+      "usage" : 10,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 75,
+      "reportID" : 1,
+      "usage" : 11,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 76,
+      "reportID" : 1,
+      "usage" : 12,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 77,
+      "reportID" : 1,
+      "usage" : 13,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 78,
+      "reportID" : 1,
+      "usage" : 14,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 79,
+      "reportID" : 1,
+      "usage" : 15,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 80,
+      "reportID" : 1,
+      "usage" : 16,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 81,
+      "reportID" : 1,
+      "usage" : 17,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 82,
+      "reportID" : 1,
+      "usage" : 18,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 83,
+      "reportID" : 1,
+      "usage" : 19,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 84,
+      "reportID" : 1,
+      "usage" : 20,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 85,
+      "reportID" : 1,
+      "usage" : 21,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 86,
+      "reportID" : 1,
+      "usage" : 22,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 87,
+      "reportID" : 1,
+      "usage" : 23,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 88,
+      "reportID" : 1,
+      "usage" : 24,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 89,
+      "reportID" : 1,
+      "usage" : 25,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 90,
+      "reportID" : 1,
+      "usage" : 26,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 91,
+      "reportID" : 1,
+      "usage" : 27,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 92,
+      "reportID" : 1,
+      "usage" : 28,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 93,
+      "reportID" : 1,
+      "usage" : 29,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 94,
+      "reportID" : 1,
+      "usage" : 30,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 95,
+      "reportID" : 1,
+      "usage" : 31,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 96,
+      "reportID" : 1,
+      "usage" : 32,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 97,
+      "reportID" : 1,
+      "usage" : 33,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 98,
+      "reportID" : 1,
+      "usage" : 34,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 99,
+      "reportID" : 1,
+      "usage" : 35,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 100,
+      "reportID" : 1,
+      "usage" : 36,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 101,
+      "reportID" : 1,
+      "usage" : 37,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 102,
+      "reportID" : 1,
+      "usage" : 38,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 103,
+      "reportID" : 1,
+      "usage" : 39,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 104,
+      "reportID" : 1,
+      "usage" : 40,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 105,
+      "reportID" : 1,
+      "usage" : 41,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 106,
+      "reportID" : 1,
+      "usage" : 42,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 107,
+      "reportID" : 1,
+      "usage" : 43,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 108,
+      "reportID" : 1,
+      "usage" : 44,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 109,
+      "reportID" : 1,
+      "usage" : 45,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 110,
+      "reportID" : 1,
+      "usage" : 46,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 111,
+      "reportID" : 1,
+      "usage" : 47,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 112,
+      "reportID" : 1,
+      "usage" : 48,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 113,
+      "reportID" : 1,
+      "usage" : 49,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 114,
+      "reportID" : 1,
+      "usage" : 50,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 115,
+      "reportID" : 1,
+      "usage" : 51,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 116,
+      "reportID" : 1,
+      "usage" : 52,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 117,
+      "reportID" : 1,
+      "usage" : 53,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 118,
+      "reportID" : 1,
+      "usage" : 54,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 119,
+      "reportID" : 1,
+      "usage" : 55,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 120,
+      "reportID" : 1,
+      "usage" : 56,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 121,
+      "reportID" : 1,
+      "usage" : 57,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 122,
+      "reportID" : 1,
+      "usage" : 58,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 123,
+      "reportID" : 1,
+      "usage" : 59,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 124,
+      "reportID" : 1,
+      "usage" : 60,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 125,
+      "reportID" : 1,
+      "usage" : 61,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 126,
+      "reportID" : 1,
+      "usage" : 62,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 127,
+      "reportID" : 1,
+      "usage" : 63,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 128,
+      "reportID" : 1,
+      "usage" : 64,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 129,
+      "reportID" : 1,
+      "usage" : 65,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 130,
+      "reportID" : 1,
+      "usage" : 66,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 131,
+      "reportID" : 1,
+      "usage" : 67,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 132,
+      "reportID" : 1,
+      "usage" : 68,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 133,
+      "reportID" : 1,
+      "usage" : 69,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 134,
+      "reportID" : 1,
+      "usage" : 70,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 135,
+      "reportID" : 1,
+      "usage" : 71,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 136,
+      "reportID" : 1,
+      "usage" : 72,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 137,
+      "reportID" : 1,
+      "usage" : 73,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 138,
+      "reportID" : 1,
+      "usage" : 74,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 139,
+      "reportID" : 1,
+      "usage" : 75,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 140,
+      "reportID" : 1,
+      "usage" : 76,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 141,
+      "reportID" : 1,
+      "usage" : 77,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 142,
+      "reportID" : 1,
+      "usage" : 78,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 143,
+      "reportID" : 1,
+      "usage" : 79,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 144,
+      "reportID" : 1,
+      "usage" : 80,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 145,
+      "reportID" : 1,
+      "usage" : 81,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 146,
+      "reportID" : 1,
+      "usage" : 82,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 147,
+      "reportID" : 1,
+      "usage" : 83,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 148,
+      "reportID" : 1,
+      "usage" : 84,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 149,
+      "reportID" : 1,
+      "usage" : 85,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 150,
+      "reportID" : 1,
+      "usage" : 86,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 151,
+      "reportID" : 1,
+      "usage" : 87,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 152,
+      "reportID" : 1,
+      "usage" : 88,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 153,
+      "reportID" : 1,
+      "usage" : 89,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 154,
+      "reportID" : 1,
+      "usage" : 90,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 155,
+      "reportID" : 1,
+      "usage" : 91,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 156,
+      "reportID" : 1,
+      "usage" : 92,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 157,
+      "reportID" : 1,
+      "usage" : 93,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 158,
+      "reportID" : 1,
+      "usage" : 94,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 159,
+      "reportID" : 1,
+      "usage" : 95,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 160,
+      "reportID" : 1,
+      "usage" : 96,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 161,
+      "reportID" : 1,
+      "usage" : 97,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 162,
+      "reportID" : 1,
+      "usage" : 98,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 163,
+      "reportID" : 1,
+      "usage" : 99,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 164,
+      "reportID" : 1,
+      "usage" : 100,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 165,
+      "reportID" : 1,
+      "usage" : 101,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 166,
+      "reportID" : 1,
+      "usage" : 102,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 167,
+      "reportID" : 1,
+      "usage" : 103,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 168,
+      "reportID" : 1,
+      "usage" : 104,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 169,
+      "reportID" : 1,
+      "usage" : 105,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 170,
+      "reportID" : 1,
+      "usage" : 106,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 171,
+      "reportID" : 1,
+      "usage" : 107,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 172,
+      "reportID" : 1,
+      "usage" : 108,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 173,
+      "reportID" : 1,
+      "usage" : 109,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 174,
+      "reportID" : 1,
+      "usage" : 110,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 175,
+      "reportID" : 1,
+      "usage" : 111,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 176,
+      "reportID" : 1,
+      "usage" : 112,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 177,
+      "reportID" : 1,
+      "usage" : 113,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 178,
+      "reportID" : 1,
+      "usage" : 114,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 179,
+      "reportID" : 1,
+      "usage" : 115,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 180,
+      "reportID" : 1,
+      "usage" : 116,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 181,
+      "reportID" : 1,
+      "usage" : 117,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 182,
+      "reportID" : 1,
+      "usage" : 118,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 183,
+      "reportID" : 1,
+      "usage" : 119,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 184,
+      "reportID" : 1,
+      "usage" : 120,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 185,
+      "reportID" : 1,
+      "usage" : 121,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 186,
+      "reportID" : 1,
+      "usage" : 122,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 187,
+      "reportID" : 1,
+      "usage" : 123,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 188,
+      "reportID" : 1,
+      "usage" : 124,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 189,
+      "reportID" : 1,
+      "usage" : 125,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 190,
+      "reportID" : 1,
+      "usage" : 126,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 191,
+      "reportID" : 1,
+      "usage" : 127,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 192,
+      "reportID" : 1,
+      "usage" : 128,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 193,
+      "reportID" : 1,
+      "usage" : 129,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 194,
+      "reportID" : 1,
+      "usage" : 130,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 195,
+      "reportID" : 1,
+      "usage" : 131,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 196,
+      "reportID" : 1,
+      "usage" : 132,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 197,
+      "reportID" : 1,
+      "usage" : 133,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 198,
+      "reportID" : 1,
+      "usage" : 134,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 199,
+      "reportID" : 1,
+      "usage" : 135,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 200,
+      "reportID" : 1,
+      "usage" : 136,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 201,
+      "reportID" : 1,
+      "usage" : 137,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 202,
+      "reportID" : 1,
+      "usage" : 138,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 203,
+      "reportID" : 1,
+      "usage" : 139,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 204,
+      "reportID" : 1,
+      "usage" : 140,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 205,
+      "reportID" : 1,
+      "usage" : 141,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 206,
+      "reportID" : 1,
+      "usage" : 142,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 207,
+      "reportID" : 1,
+      "usage" : 143,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 208,
+      "reportID" : 1,
+      "usage" : 144,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 209,
+      "reportID" : 1,
+      "usage" : 145,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 210,
+      "reportID" : 1,
+      "usage" : 146,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 211,
+      "reportID" : 1,
+      "usage" : 147,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 212,
+      "reportID" : 1,
+      "usage" : 148,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 213,
+      "reportID" : 1,
+      "usage" : 149,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 214,
+      "reportID" : 1,
+      "usage" : 150,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 215,
+      "reportID" : 1,
+      "usage" : 151,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 216,
+      "reportID" : 1,
+      "usage" : 152,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 217,
+      "reportID" : 1,
+      "usage" : 153,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 218,
+      "reportID" : 1,
+      "usage" : 154,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 219,
+      "reportID" : 1,
+      "usage" : 155,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 220,
+      "reportID" : 1,
+      "usage" : 156,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 221,
+      "reportID" : 1,
+      "usage" : 157,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 222,
+      "reportID" : 1,
+      "usage" : 158,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 223,
+      "reportID" : 1,
+      "usage" : 159,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 224,
+      "reportID" : 1,
+      "usage" : 160,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 225,
+      "reportID" : 1,
+      "usage" : 161,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 226,
+      "reportID" : 1,
+      "usage" : 162,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 227,
+      "reportID" : 1,
+      "usage" : 163,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 228,
+      "reportID" : 1,
+      "usage" : 164,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 229,
+      "reportID" : 1,
+      "usage" : 165,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 230,
+      "reportID" : 1,
+      "usage" : 166,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 231,
+      "reportID" : 1,
+      "usage" : 167,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 232,
+      "reportID" : 1,
+      "usage" : 168,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 233,
+      "reportID" : 1,
+      "usage" : 169,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 234,
+      "reportID" : 1,
+      "usage" : 170,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 235,
+      "reportID" : 1,
+      "usage" : 171,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 236,
+      "reportID" : 1,
+      "usage" : 172,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 237,
+      "reportID" : 1,
+      "usage" : 173,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 238,
+      "reportID" : 1,
+      "usage" : 174,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 239,
+      "reportID" : 1,
+      "usage" : 175,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 240,
+      "reportID" : 1,
+      "usage" : 176,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 241,
+      "reportID" : 1,
+      "usage" : 177,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 242,
+      "reportID" : 1,
+      "usage" : 178,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 243,
+      "reportID" : 1,
+      "usage" : 179,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 244,
+      "reportID" : 1,
+      "usage" : 180,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 245,
+      "reportID" : 1,
+      "usage" : 181,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 246,
+      "reportID" : 1,
+      "usage" : 182,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 247,
+      "reportID" : 1,
+      "usage" : 183,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 248,
+      "reportID" : 1,
+      "usage" : 184,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 249,
+      "reportID" : 1,
+      "usage" : 185,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 250,
+      "reportID" : 1,
+      "usage" : 186,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 251,
+      "reportID" : 1,
+      "usage" : 187,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 252,
+      "reportID" : 1,
+      "usage" : 188,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 253,
+      "reportID" : 1,
+      "usage" : 189,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 254,
+      "reportID" : 1,
+      "usage" : 190,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 255,
+      "reportID" : 1,
+      "usage" : 191,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 256,
+      "reportID" : 1,
+      "usage" : 192,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 257,
+      "reportID" : 1,
+      "usage" : 193,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 258,
+      "reportID" : 1,
+      "usage" : 194,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 259,
+      "reportID" : 1,
+      "usage" : 195,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 260,
+      "reportID" : 1,
+      "usage" : 196,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 261,
+      "reportID" : 1,
+      "usage" : 197,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 262,
+      "reportID" : 1,
+      "usage" : 198,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 263,
+      "reportID" : 1,
+      "usage" : 199,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 264,
+      "reportID" : 1,
+      "usage" : 200,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 265,
+      "reportID" : 1,
+      "usage" : 201,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 266,
+      "reportID" : 1,
+      "usage" : 202,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 267,
+      "reportID" : 1,
+      "usage" : 203,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 268,
+      "reportID" : 1,
+      "usage" : 204,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 269,
+      "reportID" : 1,
+      "usage" : 205,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 270,
+      "reportID" : 1,
+      "usage" : 206,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 271,
+      "reportID" : 1,
+      "usage" : 207,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 272,
+      "reportID" : 1,
+      "usage" : 208,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 273,
+      "reportID" : 1,
+      "usage" : 209,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 274,
+      "reportID" : 1,
+      "usage" : 210,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 275,
+      "reportID" : 1,
+      "usage" : 211,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 276,
+      "reportID" : 1,
+      "usage" : 212,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 277,
+      "reportID" : 1,
+      "usage" : 213,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 278,
+      "reportID" : 1,
+      "usage" : 214,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 279,
+      "reportID" : 1,
+      "usage" : 215,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 280,
+      "reportID" : 1,
+      "usage" : 216,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 281,
+      "reportID" : 1,
+      "usage" : 217,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 282,
+      "reportID" : 1,
+      "usage" : 218,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 283,
+      "reportID" : 1,
+      "usage" : 219,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 284,
+      "reportID" : 1,
+      "usage" : 220,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 285,
+      "reportID" : 1,
+      "usage" : 221,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 286,
+      "reportID" : 1,
+      "usage" : 222,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 287,
+      "reportID" : 1,
+      "usage" : 223,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 288,
+      "reportID" : 1,
+      "usage" : 224,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 289,
+      "reportID" : 1,
+      "usage" : 225,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 290,
+      "reportID" : 1,
+      "usage" : 226,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 291,
+      "reportID" : 1,
+      "usage" : 227,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 292,
+      "reportID" : 1,
+      "usage" : 228,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 293,
+      "reportID" : 1,
+      "usage" : 229,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 294,
+      "reportID" : 1,
+      "usage" : 230,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 295,
+      "reportID" : 1,
+      "usage" : 231,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 296,
+      "reportID" : 1,
+      "usage" : 232,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 297,
+      "reportID" : 1,
+      "usage" : 233,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 298,
+      "reportID" : 1,
+      "usage" : 234,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 299,
+      "reportID" : 1,
+      "usage" : 235,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 300,
+      "reportID" : 1,
+      "usage" : 236,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 301,
+      "reportID" : 1,
+      "usage" : 237,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 302,
+      "reportID" : 1,
+      "usage" : 238,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 303,
+      "reportID" : 1,
+      "usage" : 239,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 304,
+      "reportID" : 1,
+      "usage" : 240,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 305,
+      "reportID" : 1,
+      "usage" : 241,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 306,
+      "reportID" : 1,
+      "usage" : 242,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 307,
+      "reportID" : 1,
+      "usage" : 243,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 308,
+      "reportID" : 1,
+      "usage" : 244,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 309,
+      "reportID" : 1,
+      "usage" : 245,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 310,
+      "reportID" : 1,
+      "usage" : 246,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 311,
+      "reportID" : 1,
+      "usage" : 247,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 312,
+      "reportID" : 1,
+      "usage" : 248,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 313,
+      "reportID" : 1,
+      "usage" : 249,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 314,
+      "reportID" : 1,
+      "usage" : 250,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 315,
+      "reportID" : 1,
+      "usage" : 251,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 316,
+      "reportID" : 1,
+      "usage" : 252,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 317,
+      "reportID" : 1,
+      "usage" : 253,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 318,
+      "reportID" : 1,
+      "usage" : 254,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 319,
+      "reportID" : 1,
+      "usage" : 255,
+      "usagePage" : 7
+    },
+    {
+      "cookie" : 320,
+      "reportID" : 6,
+      "usage" : 1,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 321,
+      "reportID" : 6,
+      "usage" : 2,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 322,
+      "reportID" : 6,
+      "usage" : 3,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 323,
+      "reportID" : 6,
+      "usage" : 4,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 324,
+      "reportID" : 6,
+      "usage" : 5,
+      "usagePage" : 9
+    },
+    {
+      "cookie" : 337,
+      "reportID" : 6,
+      "usage" : 48,
+      "usagePage" : 1
+    },
+    {
+      "cookie" : 338,
+      "reportID" : 6,
+      "usage" : 49,
+      "usagePage" : 1
+    },
+    {
+      "cookie" : 339,
+      "reportID" : 6,
+      "usage" : 56,
+      "usagePage" : 1
+    },
+    {
+      "cookie" : 8,
+      "reportID" : 0,
+      "usage" : 4294967295,
+      "usagePage" : 0
+    },
+    {
+      "cookie" : 7,
+      "reportID" : 0,
+      "usage" : 0,
+      "usagePage" : 0
+    },
+    {
+      "cookie" : 10,
+      "reportID" : 2,
+      "usage" : 4294967295,
+      "usagePage" : 0
+    },
+    {
+      "cookie" : 9,
+      "reportID" : 2,
+      "usage" : 0,
+      "usagePage" : 0
+    },
+    {
+      "cookie" : 12,
+      "reportID" : 7,
+      "usage" : 4294967295,
+      "usagePage" : 0
+    },
+    {
+      "cookie" : 11,
+      "reportID" : 7,
+      "usage" : 0,
+      "usagePage" : 0
+    },
+    {
+      "cookie" : 14,
+      "reportID" : 1,
+      "usage" : 4294967295,
+      "usagePage" : 0
+    },
+    {
+      "cookie" : 13,
+      "reportID" : 1,
+      "usage" : 0,
+      "usagePage" : 0
+    },
+    {
+      "cookie" : 16,
+      "reportID" : 6,
+      "usage" : 4294967295,
+      "usagePage" : 0
+    },
+    {
+      "cookie" : 15,
+      "reportID" : 6,
+      "usage" : 0,
+      "usagePage" : 0
+    }
+  ],
+  "firmwareVersion" : 283,
+  "productID" : 4130,
+  "recordedAt" : "2026-09-18T10:27:44Z",
+  "vendorID" : 13623
+}

@@ -163,6 +163,52 @@ enum PressDetector {
   }
 }
 
+// MARK: - Edge detection
+
+/// Capture accepts a control only when its element goes from rest to active. A held trigger streams
+/// many reports; without this, one pull satisfied LT, then RT, then L3.
+struct EdgeDetector {
+  private var active: [UInt32: Bool] = [:]
+  /// Returns true exactly once per rest-to-active transition of the element.
+  mutating func isRisingEdge(_ ev: RawEvent) -> Bool {
+    let now = PressDetector.matches(ev, kind: PressDetector.kind(of: ev))
+    let was = active[ev.cookie] ?? false
+    active[ev.cookie] = now
+    return now && !was
+  }
+}
+
+extension PressDetector {
+  /// The capture kind an element belongs to, from its usage alone.
+  static func kind(of ev: RawEvent) -> String {
+    switch ev.usageType { case 1: return "button"; case 3: return "hat"; case 2: return ev.usagePage == 2 ? "trigger" : "axis"; default: return "" }
+  }
+}
+
+// MARK: - Glyph path data
+
+/// Parses normalized "M x y L x y C x1 y1 x2 y2 x y Z" path data (0…1 in both axes) into a CGPath scaled to a rect.
+enum GlyphPath {
+  static func cgPath(_ paths: [String], in r: CGRect) -> CGPath {
+    let out = CGMutablePath()
+    func pt(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: r.minX + CGFloat(x) * r.width, y: r.minY + CGFloat(y) * r.height) }
+    for d in paths {
+      let t = d.split(separator: " ").map(String.init); var i = 0
+      func n() -> Double { let v = Double(t[i]) ?? 0; i += 1; return v }
+      while i < t.count {
+        switch t[i] {
+        case "M": i += 1; let x = n(), y = n(); out.move(to: pt(x, y))
+        case "L": i += 1; let x = n(), y = n(); out.addLine(to: pt(x, y))
+        case "C": i += 1; let x1 = n(), y1 = n(), x2 = n(), y2 = n(), x = n(), y = n(); out.addCurve(to: pt(x, y), control1: pt(x1, y1), control2: pt(x2, y2))
+        case "Z": i += 1; out.closeSubpath()
+        default: i += 1
+        }
+      }
+    }
+    return out
+  }
+}
+
 // MARK: - Personality
 
 enum PersonalityWriter {

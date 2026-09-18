@@ -107,7 +107,7 @@ final class Wizard: ObservableObject {
   var cliURL: URL { Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/g7pro") }
   private var lastRawControlID: String? = nil
   private var lastRawAt = Date.distantPast
-  private var rawActive: [UInt32: Bool] = [:]     // per HID element: was it active at the last report? (edge detection)
+  private var edges = EdgeDetector()              // per HID element: rest-to-active transitions
 
   init() {
     // Resources live in the app bundle, or (when run straight from the build directory) in the repo.
@@ -238,10 +238,8 @@ final class Wizard: ObservableObject {
     }
     // Edge detection: a control counts only when it goes from rest to active, so a held trigger, stick or button
     // can't satisfy the next prompt with its continuing stream of reports.
-    let activeNow = PressDetector.matches(ev, kind: c_kindFor(ev))
-    let wasActive = rawActive[ev.cookie] ?? false
-    rawActive[ev.cookie] = activeNow
-    guard step == .capture, let c = current, activeNow, !wasActive, PressDetector.matches(ev, kind: c.kind) else { return }
+    let rising = edges.isRisingEdge(ev)
+    guard step == .capture, let c = current, rising, PressDetector.matches(ev, kind: c.kind) else { return }
     if c.kind == "axis" && axisDir(ev.value) != expectedAxisDir(c) { return }   // wrong direction on the right axis: ignore
     if c.kind == "hat" && hatDir(ev.value) != hatDir(for: c.id) { return }
     let cap = Capture(controlID: c.id, usageType: ev.usageType, cookie: ev.cookie, usagePage: ev.usagePage, usage: ev.usage, reportID: ev.reportID)
@@ -261,10 +259,6 @@ final class Wizard: ObservableObject {
     captures.append(cap)
     litControl = c.id
     advance()
-  }
-  /// The kind an element belongs to, for rest/active tracking regardless of what is being prompted.
-  private func c_kindFor(_ ev: RawEvent) -> String {
-    switch ev.usageType { case 1: return "button"; case 3: return "hat"; case 2: return ev.usagePage == 2 ? "trigger" : "axis"; default: return "" }
   }
   private func advance() {
     var i = currentIndex + 1
@@ -767,24 +761,8 @@ struct ControlTarget: View {
 /// A SwiftUI Shape from normalized "M x y L x y C … Z" path data (0…1 in both axes, scaled to the rect).
 struct GlyphShape: Shape {
   let glyph: Glyph
-  func path(in r: CGRect) -> Path {
-    var out = Path()
-    func pt(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: r.minX + CGFloat(x) * r.width, y: r.minY + CGFloat(y) * r.height) }
-    for d in glyph.paths {
-      let t = d.split(separator: " ").map(String.init); var i = 0
-      func n() -> Double { let v = Double(t[i])!; i += 1; return v }
-      while i < t.count {
-        switch t[i] {
-        case "M": i += 1; let x = n(), y = n(); out.move(to: pt(x, y))
-        case "L": i += 1; let x = n(), y = n(); out.addLine(to: pt(x, y))
-        case "C": i += 1; let x1 = n(), y1 = n(), x2 = n(), y2 = n(), x = n(), y = n(); out.addCurve(to: pt(x, y), control1: pt(x1, y1), control2: pt(x2, y2))
-        case "Z": i += 1; out.closeSubpath()
-        default: i += 1
-        }
-      }
-    }
-    return out
-  }
+  func path(in r: CGRect) -> Path { Path(GlyphPath.cgPath(glyph.paths, in: r)) }
+}
 }
 
 struct ControllerView: View {

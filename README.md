@@ -107,6 +107,8 @@ src/main.swift             the `g7pro` command-line tool
 src/App.swift              the SwiftUI wizard
 tools/pdfpaths.swift       PDF vector extractor that produced the controller drawing
 tools/icon.swift           renders the app icon from the drawing
+Tests/G7ProCoreTests       Swift Testing unit tests, plus a recording of the pad's HID elements
+Package.swift              exposes the core as a library for `swift test`; build-app.sh builds the app
 build-app.sh               builds the .app (needs Xcode Command Line Tools); ad-hoc signed
 .github/workflows          builds and publishes the zip on tags
 ```
@@ -127,6 +129,9 @@ can reuse them unchanged.
    ```
 
 A locally built app carries no quarantine flag, so Gatekeeper accepts it.
+
+Run `swift test` for the unit tests. They cover the index rule, the personality writer, press and edge
+detection, the data files, and glyph parsing, and they need no pad.
 
 ## Troubleshooting
 

@@ -114,9 +114,35 @@ generic-desktop axes, which put LT at axis index 8 and RT at 7 on this pad.
 2. The zip is ad-hoc signed. Browser downloads hit Gatekeeper; `curl` and `git` do not.
 3. Notarization needs a Developer ID. The workflow has a marked spot for it.
 
-## Testing a change
+## Tests
 
-1. Run `./build-app.sh`.
+`swift test` runs the unit tests in `Tests/G7ProCoreTests` with Swift Testing. The Command Line Tools
+are enough; you do not need Xcode. `Package.swift` exists only for this: it exposes Core.swift and
+Install.swift as a library. `build-app.sh` still builds the shipped app with swiftc.
+
+What the tests pin down:
+
+1. The index rule, against `Tests/G7ProCoreTests/Fixtures/g7pro-elements.json`, a recording of the pad's
+   HID elements. Every reference capture must reproduce the bundled personality's predicate.
+2. The personality writer: predicates, product category, untouched model keys.
+3. Press detection and edge detection, including the one-pull-one-capture rule for triggers.
+4. The data files: unique ids, personality identifiers, glyph keys, directions, and schema conformance.
+5. Glyph path parsing.
+
+Re-record the fixture when the pad's firmware changes its descriptor. The recorder is a ten-line
+IOKit program: match the pad by vendor and product ID, copy its input elements, write cookie, usage
+page, usage, and report ID as JSON. Keep the recorded firmware version in the file.
+
+CI runs `swift test`, builds the app, and runs `g7pro status` on every push and pull request.
+Nothing in CI needs a pad, root, or SIP off.
+
+End-to-end tests stay manual. Apple's UI testing needs Xcode, and the real path needs a paired pad,
+SIP off, and root, which no runner provides.
+
+## Testing a change by hand
+
+1. Run `swift test`. Fix anything red before you touch the app.
+2. Run `./build-app.sh`.
 2. Reset to a new-user state when the change touches the flow: `tccutil reset ListenEvent
    com.arcataroger.g7pro-bluetooth-setup`, delete `~/Library/Application Support/G7Pro Bluetooth Setup`,
    and run the app's Uninstall.
