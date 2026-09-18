@@ -69,6 +69,11 @@ final class Wizard: ObservableObject {
     FrameworkObserver.shared.onConnection = { [weak self] on in self?.frameworkSeesPad = on }
     FrameworkObserver.shared.onElement = { [weak self] name, dir in self?.frameworkEvent(name, dir) }
     FrameworkObserver.shared.start()
+    // Developer convenience: `G7ProSetup --step capture` jumps straight to a step (permission must already be granted).
+    if let i = CommandLine.arguments.firstIndex(of: "--step"), i + 1 < CommandLine.arguments.count,
+       let s = Step.allCases.first(where: { $0.title.lowercased().hasPrefix(CommandLine.arguments[i + 1].lowercased()) }) {
+      refreshPermission(); step = s
+    }
   }
 
   // MARK: permission + HID
@@ -368,14 +373,22 @@ struct DoneView: View {
   }
 }
 
-// MARK: - Controller drawing (data-driven from controls.json)
+// MARK: - Controller drawing: the manual's line art (data/controller-front.svg) with hit targets from controls.json
 
 struct ControllerView: View {
   @EnvironmentObject var wiz: Wizard
   let target: String?; let lit: String?; let captured: Set<String>; let ok: Set<String>; let bad: [String: String]
   let onClick: (String) -> Void
+  @Environment(\.colorScheme) private var scheme
 
-  /// Controls that draw a base shape (one per physical position).
+  private static let art: NSImage? = {
+    let candidates = [Bundle.main.resourceURL?.appendingPathComponent("data/controller-front.svg")].compactMap { $0 }
+    for u in candidates { if let i = NSImage(contentsOf: u) { i.isTemplate = true; return i } }
+    return nil
+  }()
+  private var aspect: CGFloat { (Self.art?.size.height ?? 52.5) / (Self.art?.size.width ?? 76.5) }
+
+  /// One hit target per physical position; directional controls share their stick/pad.
   private var bases: [ControlSpec] {
     var seen = Set<String>(); var out: [ControlSpec] = []
     for c in wiz.controls { let key = "\(c.x),\(c.y)"; if !seen.contains(key) { seen.insert(key); out.append(c) } }
@@ -385,42 +398,52 @@ struct ControllerView: View {
 
   var body: some View {
     GeometryReader { g in
-      let w = g.size.width, h = w * 0.68
-      ZStack {
-        RoundedRectangle(cornerRadius: w * 0.12).fill(Color.gray.opacity(0.12)).frame(width: w, height: h * 0.8).offset(y: h * 0.1)
+      let w = g.size.width, h = w * aspect
+      ZStack(alignment: .topLeading) {
+        if let art = Self.art {
+          Image(nsImage: art).resizable().interpolation(.high)
+            .foregroundStyle(scheme == .dark ? Color.white.opacity(0.85) : Color.black.opacity(0.85))
+            .frame(width: w, height: h)
+        } else {
+          RoundedRectangle(cornerRadius: 24).fill(Color.gray.opacity(0.15)).frame(width: w, height: h)
+        }
         ForEach(bases) { c in
           let sibs = siblings(c)
-          let state = stateFor(sibs)
+          let st = stateFor(sibs)
           let dir = sibs.first { $0.id == target }?.gcDir ?? sibs.first { $0.id == lit }?.gcDir
-          shape(c, size: w).fill(state.fill).overlay(shape(c, size: w).stroke(state.stroke, lineWidth: state.width))
-            .overlay(Text(dir.map { arrow($0) } ?? c.label).font(.system(size: w * 0.028, weight: .bold)).foregroundStyle(state.text))
-            .position(x: c.x * w, y: c.y * h)
-            .onTapGesture { onClick(sibs.first { $0.isMappable }?.id ?? c.id) }
-            .help(sibs.map { $0.prompt }.joined(separator: " / "))
+          let d = diameter(c.shape, w)
+          ZStack {
+            shape(c.shape).fill(st.fill)
+            shape(c.shape).stroke(st.stroke, lineWidth: st.width)
+            if let text = dir.map({ arrow($0) }) ?? (c.label.isEmpty ? nil : c.label) {
+              Text(text).font(.system(size: max(9, d * 0.42), weight: .bold)).foregroundStyle(st.text)
+            }
+          }
+          .frame(width: d * (c.shape == "wide" ? 2.2 : c.shape == "pill" ? 1.6 : 1), height: d)
+          .position(x: c.x * w, y: c.y * h)
+          .contentShape(Rectangle())
+          .onTapGesture { onClick(sibs.first { $0.isMappable }?.id ?? c.id) }
+          .help(sibs.map { $0.prompt }.joined(separator: " / "))
         }
       }.frame(width: w, height: h)
     }
   }
   private func arrow(_ d: String) -> String { ["up": "↑", "down": "↓", "left": "←", "right": "→"][d] ?? d }
+  private func diameter(_ shape: String, _ w: CGFloat) -> CGFloat {
+    switch shape { case "stick": return w * 0.135; case "dpad": return w * 0.14; case "small", "circle-sm": return w * 0.05; case "pill": return w * 0.04; case "wide": return w * 0.045; default: return w * 0.065 }
+  }
+  private func shape(_ s: String) -> AnyShape {
+    switch s { case "small", "wide": return AnyShape(RoundedRectangle(cornerRadius: 8)); case "pill": return AnyShape(Capsule()); default: return AnyShape(Circle()) }
+  }
   private struct S { var fill: Color; var stroke: Color; var width: CGFloat; var text: Color }
   private func stateFor(_ sibs: [ControlSpec]) -> S {
     let ids = Set(sibs.map { $0.id })
-    if let t = target, ids.contains(t) { return S(fill: .accentColor.opacity(0.9), stroke: .accentColor, width: 3, text: .white) }
-    if let l = lit, ids.contains(l) { return S(fill: .yellow.opacity(0.8), stroke: .orange, width: 3, text: .black) }
-    if !ids.isDisjoint(with: Set(bad.keys)) { return S(fill: .red.opacity(0.7), stroke: .red, width: 2, text: .white) }
-    if !ids.isDisjoint(with: ok) { return S(fill: .green.opacity(0.7), stroke: .green, width: 2, text: .white) }
-    if !ids.isDisjoint(with: captured) { return S(fill: .green.opacity(0.25), stroke: .green.opacity(0.6), width: 1.5, text: .primary) }
-    if sibs.allSatisfy({ !$0.isMappable }) { return S(fill: .gray.opacity(0.15), stroke: .gray.opacity(0.4), width: 1, text: .secondary) }
-    return S(fill: .gray.opacity(0.25), stroke: .gray, width: 1, text: .primary)
-  }
-  private func shape(_ c: ControlSpec, size w: CGFloat) -> AnyShape {
-    switch c.shape {
-    case "circle": return AnyShape(Circle().size(width: w * 0.07, height: w * 0.07).offset(x: -w * 0.035, y: -w * 0.035))
-    case "small":  return AnyShape(RoundedRectangle(cornerRadius: 6).size(width: w * 0.08, height: w * 0.045).offset(x: -w * 0.04, y: -w * 0.0225))
-    case "wide":   return AnyShape(RoundedRectangle(cornerRadius: 8).size(width: w * 0.16, height: w * 0.05).offset(x: -w * 0.08, y: -w * 0.025))
-    case "stick":  return AnyShape(Circle().size(width: w * 0.13, height: w * 0.13).offset(x: -w * 0.065, y: -w * 0.065))
-    case "dpad":   return AnyShape(RoundedRectangle(cornerRadius: 10).size(width: w * 0.12, height: w * 0.12).offset(x: -w * 0.06, y: -w * 0.06))
-    default:       return AnyShape(Circle().size(width: w * 0.06, height: w * 0.06).offset(x: -w * 0.03, y: -w * 0.03))
-    }
+    if let t = target, ids.contains(t) { return S(fill: .accentColor.opacity(0.75), stroke: .accentColor, width: 3, text: .white) }
+    if let l = lit, ids.contains(l) { return S(fill: .yellow.opacity(0.7), stroke: .orange, width: 3, text: .black) }
+    if !ids.isDisjoint(with: Set(bad.keys)) { return S(fill: .red.opacity(0.55), stroke: .red, width: 2, text: .white) }
+    if !ids.isDisjoint(with: ok) { return S(fill: .green.opacity(0.55), stroke: .green, width: 2, text: .white) }
+    if !ids.isDisjoint(with: captured) { return S(fill: .green.opacity(0.18), stroke: .green.opacity(0.7), width: 1.5, text: .primary) }
+    if sibs.allSatisfy({ !$0.isMappable }) { return S(fill: .clear, stroke: .gray.opacity(0.35), width: 1, text: .secondary) }
+    return S(fill: .clear, stroke: .gray.opacity(0.6), width: 1, text: .primary)
   }
 }

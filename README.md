@@ -96,12 +96,16 @@ pad (hold **M** + the back button until the Xbox light blinks, press the face bu
 data/device.json          pad identity, database identifier, personality paths
 data/controls.json        the controls the wizard walks through, with prompts, personality identifiers,
                           expected framework elements, and drawing positions
+data/controller-front.svg the pad's front view, extracted from the vector art in GameSir's manual
+                          (tools/pdfpaths.swift walks the PDF content stream with CoreGraphics and
+                          drops the dashed callout lines)
 personality/…plist        the personality template (derived from Apple's GameSir X3 entry)
 src/Core.swift            headless logic: raw HID, framework observer, the index rule, capture → personality
 src/Install.swift         database patching, daemon restart (runs as root)
 src/main.swift            the `g7pro` CLI
 src/App.swift             the SwiftUI wizard
 build-app.sh              builds the .app (needs Xcode Command Line Tools); ad-hoc signed
+tools/pdfpaths.swift      PDF vector extractor used to produce the controller drawing
 .github/workflows         builds and publishes the zip on tags
 ```
 
@@ -146,4 +150,5 @@ built app carries no quarantine flag, so Gatekeeper does not object to it.
 ## License
 
 MIT. Apple's personality format and the X3 mapping this derives from belong to Apple; this repo ships a
-derived data file for interoperability.
+derived data file for interoperability. The controller line art is extracted from GameSir's own product
+manual and remains GameSir's; it is used here to identify the product's controls.
