@@ -14,6 +14,8 @@ a small wizard app.
 Tested on macOS 27.0 with G7 Pro firmware 1.1.11. It should work on macOS 14 and later, which is when
 Apple introduced the database this relies on.
 
+![The wizard's Verify step: press anything and the control macOS delivers lights up, with analog travel for sticks and triggers](docs/verify.png)
+
 ## Quick start
 
 1. **Disable System Integrity Protection** for the duration of the install (you turn it back on at
