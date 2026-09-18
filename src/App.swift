@@ -79,6 +79,8 @@ final class Wizard: ObservableObject {
     if let i = CommandLine.arguments.firstIndex(of: "--step"), i + 1 < CommandLine.arguments.count,
        let s = Step.allCases.first(where: { $0.title.lowercased().hasPrefix(CommandLine.arguments[i + 1].lowercased()) }) {
       autoAdvance = false; refreshPermission(); step = s
+      if let j = CommandLine.arguments.firstIndex(of: "--control"), j + 1 < CommandLine.arguments.count,
+         let k = mappable.firstIndex(where: { $0.id == CommandLine.arguments[j + 1] }) { currentIndex = k }
     }
   }
 
@@ -575,8 +577,23 @@ struct ControllerView: View {
             let shp: AnyShape = glyph.map { AnyShape(GlyphShape(glyph: $0)) } ?? shape(c.shape)
             let fw = glyph.map { _ in c.id.hasSuffix("t") ? w * 0.07 : w * 0.11 } ?? d * widthFactor(c.shape)
             let fh = glyph.map { fw * CGFloat($0.aspect) } ?? d
+            let active = isTarget || sibs.contains { $0.id == lit }
+            let vec: CGPoint? = dir.map { ["up": CGPoint(x: 0, y: -1), "down": CGPoint(x: 0, y: 1), "left": CGPoint(x: -1, y: 0), "right": CGPoint(x: 1, y: 0)][$0] ?? .zero }
             ZStack {
-              if let g = glyph, g.solid != true {
+              if let v = vec, active {
+                // a direction on a pad/stick: highlight just that edge, arrow beyond it; the base stays quiet
+                shp.stroke(Color.secondary.opacity(0.5), lineWidth: 1)
+                let r = d * 0.32, off = d * 0.34
+                Group {
+                  if isTarget { Circle().stroke(Color.accentColor, lineWidth: 3).scaleEffect(1 + 0.8 * pulseRipple).opacity(1 - pulseRipple) }
+                  Circle().fill(Color.accentColor.opacity(0.5))
+                  Circle().stroke(Color.accentColor, lineWidth: 2.5)
+                }
+                .frame(width: r, height: r).scaleEffect(isTarget ? 1 + 0.12 * pulse : 1)
+                .offset(x: v.x * off, y: v.y * off)
+                Text(arrow(dir!)).font(.system(size: max(12, d * 0.3), weight: .bold)).foregroundStyle(Color.accentColor)
+                  .offset(x: v.x * d * 0.72, y: v.y * d * 0.72)
+              } else if let g = glyph, g.solid != true {
                 // line-art silhouettes: a capsule carries the state; the outline is a stroke on top
                 if isTarget { Capsule().stroke(Color.accentColor, lineWidth: 3).scaleEffect(1 + 0.5 * pulseRipple).opacity(1 - pulseRipple) }
                 Capsule().fill(st.fill).padding(-w * 0.008)
@@ -586,14 +603,16 @@ struct ControllerView: View {
                 shp.fill(st.fill)
                 shp.stroke(st.stroke, lineWidth: st.width)
               }
-              if st.check { Image(systemName: "checkmark").font(.system(size: max(9, min(fw, fh) * 0.45), weight: .bold)).foregroundStyle(st.text) }
-              else if glyph == nil, let text = dir.map({ arrow($0) }) ?? (c.label.isEmpty ? nil : c.label) {
-                Text(text).font(.system(size: max(9, d * (c.shape == "stick" || c.shape == "dpad" ? 0.26 : 0.42)), weight: .bold)).foregroundStyle(st.text)
+              if vec == nil || !active {
+                if st.check { Image(systemName: "checkmark").font(.system(size: max(9, min(fw, fh) * 0.45), weight: .bold)).foregroundStyle(st.text) }
+                else if glyph == nil, !c.label.isEmpty {
+                  Text(c.label).font(.system(size: max(9, d * (c.shape == "stick" || c.shape == "dpad" ? 0.26 : 0.42)), weight: .bold)).foregroundStyle(st.text)
+                }
               }
             }
             .overlay(alignment: .top) { if glyph != nil { Text(c.label).font(.system(size: max(10, w * 0.019), weight: .bold)).foregroundStyle(.secondary).offset(y: -w * 0.03) } }
             .frame(width: fw, height: fh)
-            .scaleEffect(isTarget ? 1 + 0.12 * pulse : 1)
+            .scaleEffect(isTarget && vec == nil ? 1 + 0.12 * pulse : 1)
             .position(x: c.x * w, y: top + c.y * artH)
             .contentShape(Rectangle())
             .onTapGesture { onClick(sibs.first { $0.isMappable }?.id ?? c.id) }
