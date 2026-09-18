@@ -650,6 +650,102 @@ enum Glyphs {
     return g
   }()
 }
+/// Dashed leader from a callout label to its spot on the art.
+struct CalloutLeader: View {
+  let from: CGPoint, to: CGPoint, color: Color
+  var body: some View {
+    ZStack(alignment: .topLeading) {
+      Path { p in p.move(to: from); p.addLine(to: to) }.stroke(color, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+      Circle().fill(color).frame(width: 7, height: 7).position(to)
+    }
+  }
+}
+
+/// One hit target: a button, stick, pad or callout silhouette, in its current state. Kept small so older
+/// Swift compilers can type-check it.
+struct ControlTarget: View {
+  let control: ControlSpec; let state: ControllerView.S; let dir: String?; let held: Wizard.Held?
+  let isTarget: Bool; let isLit: Bool; let glyph: Glyph?; let shape: AnyShape; let d: CGFloat; let w: CGFloat
+  let pulse: Double; let ripple: Double
+
+  private var active: Bool { isTarget || isLit }
+  private var vec: CGPoint? { dir.map { ["up": CGPoint(x: 0, y: -1), "down": CGPoint(x: 0, y: 1), "left": CGPoint(x: -1, y: 0), "right": CGPoint(x: 1, y: 0)][$0] ?? .zero } }
+  private var shp: AnyShape { glyph.map { AnyShape(GlyphShape(glyph: $0)) } ?? shape }
+  private var fw: CGFloat { glyph.map { _ in control.id.hasSuffix("t") ? w * 0.07 : w * 0.11 } ?? d * (control.shape == "pill" ? 1.6 : 1) }
+  private var fh: CGFloat { glyph.map { fw * CGFloat($0.aspect) } ?? d }
+  private var isStick: Bool { control.shape == "stick" }
+
+  var body: some View {
+    ZStack {
+      if vec != nil && active { directional }
+      else if let h = held, glyph?.solid == true, control.id.hasSuffix("t") { trigger(h) }
+      else if let g = glyph, g.solid != true { lineArtCallout }
+      else { plain }
+      label
+    }
+    .overlay(alignment: .top) { if glyph != nil { Text(control.label).font(.system(size: max(10, w * 0.019), weight: .bold)).foregroundStyle(.secondary).offset(y: -w * 0.03) } }
+    .frame(width: fw, height: fh)
+    .scaleEffect(isTarget && vec == nil ? 1 + 0.12 * pulse : 1)
+  }
+
+  private var plain: some View {
+    ZStack {
+      if isTarget { shp.stroke(Color.accentColor, lineWidth: 3).scaleEffect(1 + 0.7 * ripple).opacity(1 - ripple) }
+      shp.fill(state.fill)
+      shp.stroke(state.stroke, lineWidth: state.width)
+    }
+  }
+  private var lineArtCallout: some View {
+    ZStack {
+      if isTarget { Capsule().stroke(Color.accentColor, lineWidth: 3).scaleEffect(1 + 0.5 * ripple).opacity(1 - ripple) }
+      Capsule().fill(state.fill).padding(-w * 0.008)
+      shp.stroke(isTarget ? Color.white : state.stroke, lineWidth: isTarget ? 2 : 1.4)
+    }
+  }
+  private func trigger(_ h: Wizard.Held) -> some View {
+    ZStack {
+      shp.fill(Color.accentColor.opacity(0.18))
+      shp.fill(Color.accentColor.opacity(0.65)).mask(VStack(spacing: 0) { Spacer(minLength: 0); Rectangle().frame(height: fh * CGFloat(h.value)) })
+      shp.stroke(Color.accentColor, lineWidth: 2)
+      Text("\(Int((h.value * 100).rounded()))%").font(.system(size: max(11, w * 0.017), weight: .semibold, design: .rounded)).foregroundStyle(.primary).fixedSize()
+        .offset(x: control.id == "lt" ? -fw * 1.1 : fw * 1.1)
+    }
+  }
+  private var directional: some View {
+    let v0 = vec ?? .zero
+    let mag = held.map { isStick ? $0.value : 1 } ?? 1
+    let v = (held != nil && isStick && mag > 0.05) ? CGPoint(x: held!.x / max(mag, 0.001), y: -held!.y / max(mag, 0.001)) : v0
+    let r = d * 0.32, off = d * 0.34
+    let reach = d * (0.72 + (held != nil && isStick ? 0.6 * mag : 0))
+    return ZStack {
+      shp.stroke(Color.secondary.opacity(0.5), lineWidth: 1)
+      Group {
+        if isTarget { Circle().stroke(Color.accentColor, lineWidth: 3).scaleEffect(1 + 0.8 * ripple).opacity(1 - ripple) }
+        Circle().fill(Color.accentColor.opacity(0.5))
+        Circle().stroke(Color.accentColor, lineWidth: 2.5)
+      }
+      .frame(width: r, height: r).scaleEffect(isTarget ? 1 + 0.12 * pulse : 1)
+      .offset(x: v.x * off, y: v.y * off)
+      Image(systemName: "arrow.up").font(.system(size: max(12, d * 0.3), weight: .bold)).foregroundStyle(Color.accentColor)
+        .rotationEffect(.radians(atan2(v.y, v.x) + .pi / 2))
+        .offset(x: v.x * reach, y: v.y * reach)
+      if held != nil && isStick {
+        Text("\(Int((mag * 100).rounded()))%").font(.system(size: max(11, d * 0.2), weight: .semibold, design: .rounded)).foregroundStyle(.primary).fixedSize()
+          .offset(x: v.x * (reach + d * 0.28), y: v.y * (reach + d * 0.28))
+      }
+    }
+  }
+  @ViewBuilder private var label: some View {
+    if vec != nil && active {
+      if glyph == nil, !control.label.isEmpty { Text(control.label).font(.system(size: max(9, d * 0.26), weight: .bold)).foregroundStyle(.primary) }
+    } else if state.check {
+      Image(systemName: "checkmark").font(.system(size: max(9, min(fw, fh) * 0.45), weight: .bold)).foregroundStyle(state.text)
+    } else if glyph == nil, !control.label.isEmpty {
+      Text(control.label).font(.system(size: max(9, d * (control.shape == "stick" || control.shape == "dpad" ? 0.26 : 0.42)), weight: .bold)).foregroundStyle(state.text)
+    }
+  }
+}
+
 /// A SwiftUI Shape from normalized "M x y L x y C … Z" path data (0…1 in both axes, scaled to the rect).
 struct GlyphShape: Shape {
   let glyph: Glyph
@@ -713,79 +809,20 @@ struct ControllerView: View {
             .frame(width: w, height: artH).offset(y: top)
         }
         if showTargets {
-          // callout leaders first, so targets draw over them
           ForEach(bases.filter { $0.ax != nil }) { c in
-            Path { p in p.move(to: CGPoint(x: c.x * w, y: top + c.y * artH)); p.addLine(to: CGPoint(x: (c.ax ?? c.x) * w, y: top + (c.ay ?? c.y) * artH)) }
-              .stroke(stateFor(siblings(c)).stroke, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
-            Circle().fill(stateFor(siblings(c)).stroke).frame(width: 7, height: 7).position(x: (c.ax ?? c.x) * w, y: top + (c.ay ?? c.y) * artH)
+            CalloutLeader(from: CGPoint(x: c.x * w, y: top + c.y * artH), to: CGPoint(x: (c.ax ?? c.x) * w, y: top + (c.ay ?? c.y) * artH), color: stateFor(siblings(c)).stroke)
           }
           ForEach(bases) { c in
-            let sibs = siblings(c), st = stateFor(sibs)
+            let sibs = siblings(c)
             let litSib = sibs.first { lit.keys.contains($0.id) }
             let held = litSib.flatMap { lit[$0.id] }
             let dir = sibs.first { $0.id == target }?.gcDir ?? litSib.flatMap { held?.dir ?? $0.gcDir }
-            let d = diameter(c.shape, w), isTarget = sibs.contains { $0.id == target }
-            let glyph = c.shape == "callout" ? Glyphs.all[c.id] : nil
-            let shp: AnyShape = glyph.map { AnyShape(GlyphShape(glyph: $0)) } ?? shape(c.shape)
-            let fw = glyph.map { _ in c.id.hasSuffix("t") ? w * 0.07 : w * 0.11 } ?? d * widthFactor(c.shape)
-            let fh = glyph.map { fw * CGFloat($0.aspect) } ?? d
-            let active = isTarget || litSib != nil
-            let vec: CGPoint? = dir.map { ["up": CGPoint(x: 0, y: -1), "down": CGPoint(x: 0, y: 1), "left": CGPoint(x: -1, y: 0), "right": CGPoint(x: 1, y: 0)][$0] ?? .zero }
-            ZStack {
-              if let v0 = vec, active {
-                // a direction on a pad/stick: highlight just that edge; the base stays quiet.
-                // In Verify the arrow follows the real deflection and extends with it; a percentage shows the travel.
-                shp.stroke(Color.secondary.opacity(0.5), lineWidth: 1)
-                let isStick = c.shape == "stick", mag = held.map { isStick ? $0.value : 1 } ?? 1
-                let v = (held != nil && isStick && mag > 0.05) ? CGPoint(x: held!.x / max(mag, 0.001), y: -held!.y / max(mag, 0.001)) : v0
-                let r = d * 0.32, off = d * 0.34
-                Group {
-                  if isTarget { Circle().stroke(Color.accentColor, lineWidth: 3).scaleEffect(1 + 0.8 * pulseRipple).opacity(1 - pulseRipple) }
-                  Circle().fill(Color.accentColor.opacity(0.5))
-                  Circle().stroke(Color.accentColor, lineWidth: 2.5)
-                }
-                .frame(width: r, height: r).scaleEffect(isTarget ? 1 + 0.12 * pulse : 1)
-                .offset(x: v.x * off, y: v.y * off)
-                let reach = d * (0.72 + (held != nil && isStick ? 0.6 * mag : 0))
-                Image(systemName: "arrow.up").font(.system(size: max(12, d * 0.3), weight: .bold)).foregroundStyle(Color.accentColor)
-                  .rotationEffect(.radians(atan2(v.y, v.x) + .pi / 2))
-                  .offset(x: v.x * reach, y: v.y * reach)
-                if held != nil && isStick {
-                  Text("\(Int((mag * 100).rounded()))%").font(.system(size: max(11, d * 0.2), weight: .semibold, design: .rounded)).foregroundStyle(.primary).fixedSize()
-                    .offset(x: v.x * (reach + d * 0.28), y: v.y * (reach + d * 0.28))
-                }
-              } else if let g = glyph, g.solid == true, let h = held, c.id.hasSuffix("t") {
-                // trigger travel: shade from the bottom up
-                shp.fill(Color.accentColor.opacity(0.18))
-                shp.fill(Color.accentColor.opacity(0.65))
-                  .mask(VStack(spacing: 0) { Spacer(minLength: 0); Rectangle().frame(height: fh * CGFloat(h.value)) })
-                shp.stroke(Color.accentColor, lineWidth: 2)
-                Text("\(Int((h.value * 100).rounded()))%").font(.system(size: max(11, w * 0.017), weight: .semibold, design: .rounded)).foregroundStyle(.primary).fixedSize()
-                  .offset(x: c.id == "lt" ? -fw * 1.1 : fw * 1.1)
-              } else if let g = glyph, g.solid != true {
-                // line-art silhouettes: a capsule carries the state; the outline is a stroke on top
-                if isTarget { Capsule().stroke(Color.accentColor, lineWidth: 3).scaleEffect(1 + 0.5 * pulseRipple).opacity(1 - pulseRipple) }
-                Capsule().fill(st.fill).padding(-w * 0.008)
-                shp.stroke(isTarget ? Color.white : st.stroke, lineWidth: isTarget ? 2 : 1.4)
-              } else {
-                if isTarget { shp.stroke(Color.accentColor, lineWidth: 3).scaleEffect(1 + 0.7 * pulseRipple).opacity(1 - pulseRipple) }
-                shp.fill(st.fill)
-                shp.stroke(st.stroke, lineWidth: st.width)
-              }
-              if vec != nil && active {
-                if glyph == nil, !c.label.isEmpty { Text(c.label).font(.system(size: max(9, d * 0.26), weight: .bold)).foregroundStyle(.primary) }
-              } else if st.check { Image(systemName: "checkmark").font(.system(size: max(9, min(fw, fh) * 0.45), weight: .bold)).foregroundStyle(st.text) }
-              else if glyph == nil, !c.label.isEmpty {
-                Text(c.label).font(.system(size: max(9, d * (c.shape == "stick" || c.shape == "dpad" ? 0.26 : 0.42)), weight: .bold)).foregroundStyle(st.text)
-              }
-            }
-            .overlay(alignment: .top) { if glyph != nil { Text(c.label).font(.system(size: max(10, w * 0.019), weight: .bold)).foregroundStyle(.secondary).offset(y: -w * 0.03) } }
-            .frame(width: fw, height: fh)
-            .scaleEffect(isTarget && vec == nil ? 1 + 0.12 * pulse : 1)
-            .position(x: c.x * w, y: top + c.y * artH)
-            .contentShape(Rectangle())
-            .onTapGesture { onClick(sibs.first { $0.isMappable }?.id ?? c.id) }
-            .help(sibs.map { $0.prompt }.joined(separator: " / "))
+            ControlTarget(control: c, state: stateFor(sibs), dir: dir, held: held, isTarget: sibs.contains { $0.id == target }, isLit: litSib != nil,
+                          glyph: c.shape == "callout" ? Glyphs.all[c.id] : nil, shape: shape(c.shape), d: diameter(c.shape, w), w: w, pulse: pulse, ripple: pulseRipple)
+              .position(x: c.x * w, y: top + c.y * artH)
+              .contentShape(Rectangle())
+              .onTapGesture { onClick(sibs.first { $0.isMappable }?.id ?? c.id) }
+              .help(sibs.map { $0.prompt }.joined(separator: " / "))
           }
         }
       }.frame(width: w, height: artH + top)
@@ -799,8 +836,8 @@ struct ControllerView: View {
   private func shape(_ s: String) -> AnyShape {
     switch s { case "pill", "callout": return AnyShape(Capsule()); default: return AnyShape(Circle()) }
   }
-  private struct S { var fill: Color; var stroke: Color; var width: CGFloat; var text: Color; var check = false }
-  private func stateFor(_ sibs: [ControlSpec]) -> S {
+  struct S { var fill: Color; var stroke: Color; var width: CGFloat; var text: Color; var check = false }
+  func stateFor(_ sibs: [ControlSpec]) -> S {
     let ids = Set(sibs.map { $0.id })
     let bg = scheme == .dark ? Color.black : Color.white
     if let t = target, ids.contains(t) { return S(fill: .accentColor.opacity(0.45), stroke: .accentColor, width: 2.5, text: .white) }

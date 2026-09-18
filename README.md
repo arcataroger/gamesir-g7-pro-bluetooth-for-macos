@@ -1,62 +1,56 @@
-> **Made with AI (Claude) under human supervision.**
-
 # GameSir G7 Pro over Bluetooth on macOS
 
-Makes the GameSir G7 Pro work as a real game controller on macOS when connected over **Bluetooth**:
-it shows up in System Settings › Game Controllers and works in anything that uses Apple's
-GameController framework, such as GeForce NOW, Apple Arcade, Safari's Gamepad API, and most Mac games.
+This app makes the GameSir G7 Pro work as a real game controller on macOS over **Bluetooth**.
+After setup, the pad appears in System Settings › Game Controllers. Games that use Apple's
+GameController framework see it, including GeForce NOW, Apple Arcade, and Safari's Gamepad API.
 
-Out of the box, macOS pairs the pad and even calls it a "Gamepad", but no game sees it. This project
-adds the pad to Apple's own third-party controller database. No kernel extensions, no background
-processes, no input remapping software; it is one entry in a plist and one mapping file, installed by
-a small wizard app.
+Out of the box, macOS pairs the pad and calls it a "Gamepad", yet no game sees it. The pad is
+missing from Apple's controller database. This app adds it. No kernel extensions, no background
+processes, no remapping software: one database entry and one mapping file, installed by a wizard.
 
-Tested on macOS 27.0 with G7 Pro firmware 1.1.11. It should work on macOS 14 and later, which is when
-Apple introduced the database this relies on.
+We tested it on macOS 27.0 with G7 Pro firmware 1.1.11. Apple introduced the database in macOS 14,
+so macOS 14 and later must work.
 
-![The wizard's Verify step: press anything and the control macOS delivers lights up, with analog travel for sticks and triggers](docs/verify.png)
+![Verify step: press anything and the delivered control lights up, with analog travel for sticks and triggers](docs/verify.png)
 
 ## Quick start
 
-1. **Disable System Integrity Protection** for the duration of the install (you turn it back on at
-   the end; the change persists). The database lives in a SIP-protected folder.
-   - Apple Silicon: shut down, hold the power button until "Loading startup options", choose
-     Options › Continue, then Utilities › Terminal, run `csrutil disable`, restart.
-   - Intel: restart holding Cmd-R, then Utilities › Terminal, `csrutil disable`, restart.
-2. **Download the app** from the [Releases](../../releases) page and unzip it.
-3. **Open it past Gatekeeper.** The app is not notarized yet, so macOS blocks it on first launch.
-   Double-click it once, dismiss the warning, then open System Settings › Privacy & Security, scroll
-   to the bottom, and click **Open Anyway**. (Terminal alternative:
-   `xattr -dr com.apple.quarantine "GameSir G7 Pro Bluetooth Setup.app"`.)
-4. **Follow the wizard.** It asks for Input Monitoring permission, finds the pad, has you press each
-   control once, computes the mapping, installs it with your admin password, and verifies the result
-   live on a picture of the pad. Undo a mistaken press with ⌘Z or by clicking the control.
-5. **Re-enable SIP** the same way, with `csrutil enable`.
+1. Turn off System Integrity Protection (SIP) for the install. You turn it back on at the end.
+   - On Apple Silicon: shut down. Hold the power button until "Loading startup options" appears.
+     Choose Options › Continue. Open Utilities › Terminal. Run `csrutil disable`. Restart.
+   - On Intel: restart while holding Cmd-R. Open Utilities › Terminal. Run `csrutil disable`. Restart.
+2. Download the app from the [Releases](../../releases) page. Unzip it.
+3. Open the app once. macOS blocks it, because we have not notarized it yet.
+4. Open System Settings › Privacy & Security. Scroll to the bottom. Click **Open Anyway**.
+   Terminal alternative: run `xattr -dr com.apple.quarantine "GameSir G7 Pro Bluetooth Setup.app"`.
+5. Follow the wizard. It asks for Input Monitoring, finds the pad, captures every control, computes
+   the mapping, installs it with your admin password, and lets you try it out.
+6. Turn SIP back on the same way, with `csrutil enable`.
 
-## What the wizard does, step by step
+## What the wizard does
 
 | Step | What happens |
 |---|---|
-| Welcome | Checks SIP status and shows the Recovery instructions. |
-| Permission | Requests Input Monitoring, which is needed to read the pad's raw button stream. |
-| Find the pad | Waits for the G7 Pro over Bluetooth and reads its firmware version, which the database entry must match. |
-| Capture | Asks for each control in turn and records what the pad actually sends. Sticks and D-pad included. |
-| Review | Computes the index macOS will use for every control (see *How it works*) and writes the personality file. |
-| Install | Runs the bundled `g7pro install` as admin: patches the database, installs the personality, restarts the controller daemon. Backs up the original plist first. An option (on by default) makes the pad self-identify as an Xbox One controller so games draw Xbox button glyphs; it may not apply in every game or in Steam Input. |
-| Verify | Press everything. Green = macOS delivered the right control to apps. Red = it delivered something else, with the name of what it saw. |
-| Finish | Reminds you to re-enable SIP. Offers uninstall. |
+| Welcome | Checks SIP. If SIP is on, shows the Recovery steps. |
+| Permission | Asks macOS for Input Monitoring once. The app needs it to read the pad's raw buttons. |
+| Find the pad | Waits for the G7 Pro over Bluetooth. Reads its firmware version, which the database entry must match. |
+| Capture | Asks for each control in turn and records what the pad sends. A press that differs from the reference mapping gets a second check. |
+| Review | Computes the index macOS uses for every control. Writes the mapping file. |
+| Install | Patches the database, installs the mapping, and restarts the controller daemon. Backs up the original plist first. An option, on by default, makes the pad identify as an Xbox One controller so games draw Xbox glyphs. It can fail in some games and in Steam Input. |
+| Verify | Press anything. The control macOS delivers lights up. Sticks and triggers show their travel. |
+| Finish | Reminds you to turn SIP back on. |
 
-Your capture and the generated personality are kept in
-`~/Library/Application Support/G7Pro Bluetooth Setup/`.
+The red **Uninstall** item at the bottom of the rail removes the entry and mapping again.
+The wizard keeps your capture in `~/Library/Application Support/G7Pro Bluetooth Setup/`.
 
 ## Command line
 
-The app bundles a headless CLI with the same core, also handy for scripting or for people who prefer a terminal:
+The app bundles a command-line tool with the same core:
 
 ```sh
 APP="/Applications/GameSir G7 Pro Bluetooth Setup.app"
-"$APP/Contents/MacOS/g7pro" status                 # SIP, pad, firmware, entry installed, framework adoption
-sudo "$APP/Contents/MacOS/g7pro" install           # uses the bundled personality and the connected pad's firmware version
+"$APP/Contents/MacOS/g7pro" status                 # SIP, pad, firmware, entry, what macOS reports
+sudo "$APP/Contents/MacOS/g7pro" install           # bundled mapping, connected pad's firmware version
 sudo "$APP/Contents/MacOS/g7pro" install --personality my.plist --version 283
 sudo "$APP/Contents/MacOS/g7pro" uninstall
 ```
@@ -64,94 +58,102 @@ sudo "$APP/Contents/MacOS/g7pro" uninstall
 ## How it works
 
 The G7 Pro's Bluetooth mode is its Android mode. It presents a composite HID device: a Consumer
-Control collection first (media keys), then gamepad, keyboard, and mouse collections. Apple's
-controller daemon, `gamecontrollerd`, adopts a third-party HID pad only if its vendor ID, product ID,
-and firmware version appear in a mappings database that ships as a MobileAsset:
+Control collection first, then gamepad, keyboard, and mouse collections. Apple's daemon,
+`gamecontrollerd`, adopts a third-party HID pad only if the database lists its vendor ID, product ID,
+and firmware version. The database ships as a MobileAsset:
 
 ```
 /System/Library/AssetsV2/…/com_apple_MobileAsset_GameController_DB1/…/GameControllers-Custom.bundle
 ```
 
-The bundle's `Info.plist` lists supported pads and points each at a "personality" plist that maps HID
-elements to the standard gamepad layout with predicates like `UsageType == 1 AND UsageTypeIndex == 6`.
-The GameSir X3 is in the database; the G7 Pro is not, so the daemon logs
+Its `Info.plist` lists supported pads. Each entry points at a "personality" plist that maps HID
+elements to the standard gamepad layout, with predicates like `UsageType == 1 AND UsageTypeIndex == 6`.
+Apple lists the GameSir X3 there. Apple does not list the G7 Pro, so the daemon logs
 `is NOT a supported game controller` and ignores it.
 
-Two things had to be discovered to make the entry work:
+We had to discover two things:
 
 1. **The pad's wiring.** Which HID usage each physical button sends. The wizard captures this rather
-   than assuming it, so a firmware change that reorders buttons is handled by re-running it.
-2. **How `UsageTypeIndex` is numbered.** It is *not* "the Nth button in the gamepad collection". The
-   daemon takes every input element on the whole device, sorts same-type usages by usage value, and
-   numbers those. The G7 Pro's mouse collection has buttons 1–5 and X/Y axes, which interleave with
-   the gamepad's: gamepad button 1 is index 0, mouse button 1 is index 1, gamepad button 2 is index 2,
-   and so on. Copying the X3's numbers therefore scrambled everything past A. The app computes the
-   index from the pad's real element list, so it holds for any firmware and would for other composite
-   pads too.
+   than assuming it, so a firmware change that reorders buttons only needs a new run.
+2. **How Apple numbers `UsageTypeIndex`.** It is not "the Nth button in the gamepad collection".
+   The daemon takes every input element on the whole device, sorts same-type usages by usage value,
+   and numbers those. The mouse collection has buttons 1 to 5 and X/Y axes, and they interleave with
+   the gamepad's. Gamepad button 1 is index 0, mouse button 1 is index 1, gamepad button 2 is index 2,
+   and so on. The app computes each index from the pad's real element list.
 
-The personality's `ProductCategory` is what games see as the controller type. Apple's daemon honours
-"Xbox One" here for a third-party entry, so the wizard sets it by default and games show Xbox glyphs.
-Rumble is not possible in Bluetooth mode: the pad's descriptor has no force-feedback output, so a game
-that assumes an Xbox pad rumbles will simply get nothing. Wired mode has rumble.
+The personality's `ProductCategory` sets the controller type games see. The daemon honours
+"Xbox One" for a third-party entry, so the wizard sets it by default and games show Xbox glyphs.
+Rumble is impossible in Bluetooth mode: the pad's descriptor has no force-feedback output. A game that
+expects an Xbox pad to rumble gets nothing. Wired mode has rumble.
 
-The Xbox button is sent as a Consumer Control "AC Home" key and is handled by macOS as the system
-button outside the personality. Share is sent as a keyboard PrintScreen keystroke and cannot be
-mapped. Back buttons R4/L4/R5/L5 have no codes of their own; they mirror face buttons assigned on the
-pad (hold **M** + the back button until the Xbox light blinks, press the face button to mirror).
+The pad sends the Xbox button as a Consumer Control "AC Home" key. macOS keeps it as the system
+button. The pad sends Share as a keyboard PrintScreen keystroke, which no game sees as a gamepad button.
+The back buttons L4, R4, L5, and R5 mirror other buttons. Only GameSir's own software can reassign
+them, and that software runs on Windows only for now.
 
 ## Repository layout
 
 ```
-data/device.json          pad identity, database identifier, personality paths
-data/controls.json        the controls the wizard walks through, with prompts, personality identifiers,
-                          expected framework elements, and drawing positions
-data/controller-front.svg the pad's front view, extracted from the vector art in GameSir's manual
-                          (tools/pdfpaths.swift walks the PDF content stream with CoreGraphics and
-                          keeps only the black product art, dropping the grey callouts)
-personality/…plist        the personality template (derived from Apple's GameSir X3 entry)
-src/Core.swift            headless logic: raw HID, framework observer, the index rule, capture → personality
-src/Install.swift         database patching, daemon restart (runs as root)
-src/main.swift            the `g7pro` CLI
-src/App.swift             the SwiftUI wizard
-build-app.sh              builds the .app (needs Xcode Command Line Tools); ad-hoc signed
-tools/pdfpaths.swift      PDF vector extractor used to produce the controller drawing
-.github/workflows         builds and publishes the zip on tags
+data/device.json           pad identity, database identifier, personality paths
+data/controls.json         the controls the wizard walks through: prompts, identifiers, drawing positions
+data/callout-glyphs.json   silhouettes of the triggers and bumpers, traced from the manual's top view
+data/controller-front.svg  the pad's front view, extracted from the vector art in GameSir's manual
+data/reference-mapping.json a verified capture; the wizard double-checks presses against it
+personality/…plist         the personality template (derived from Apple's GameSir X3 entry)
+src/Core.swift             headless logic: raw HID, framework observer, the index rule, capture → personality
+src/Install.swift          database patching and daemon restart (runs as root)
+src/main.swift             the `g7pro` command-line tool
+src/App.swift              the SwiftUI wizard
+tools/pdfpaths.swift       PDF vector extractor that produced the controller drawing
+tools/icon.swift           renders the app icon from the drawing
+build-app.sh               builds the .app (needs Xcode Command Line Tools); ad-hoc signed
+.github/workflows          builds and publishes the zip on tags
 ```
 
-The UI is deliberately thin. Anything that decides something lives in `src/Core.swift` or the JSON
-files, so a different front end can reuse it unchanged.
+The UI stays thin. Every decision lives in `src/Core.swift` or the JSON files, so another front end
+can reuse them unchanged.
 
 ## Building from source
 
-```sh
-git clone https://github.com/arcataroger/gamesir-g7-pro-bluetooth-for-macos.git
-cd gamesir-g7-pro-bluetooth-for-macos
-./build-app.sh          # → build/GameSir G7 Pro Bluetooth Setup.app  and  build/g7pro
-open build/*.app
-```
+1. Install the Xcode Command Line Tools: run `xcode-select --install`. You do not need full Xcode.
+2. Clone the repo and build:
 
-Requires the Xcode Command Line Tools (`xcode-select --install`); full Xcode is not needed. A locally
-built app carries no quarantine flag, so Gatekeeper does not object to it.
+   ```sh
+   git clone https://github.com/arcataroger/gamesir-g7-pro-bluetooth-for-macos.git
+   cd gamesir-g7-pro-bluetooth-for-macos
+   ./build-app.sh          # → build/GameSir G7 Pro Bluetooth Setup.app  and  build/g7pro
+   open build/*.app
+   ```
+
+A locally built app carries no quarantine flag, so Gatekeeper accepts it.
 
 ## Troubleshooting
 
-- **The pad's light keeps blinking though macOS says "Connected", then it powers off.** The pad's
-  Bluetooth stack is stuck and service discovery times out. Hold the Xbox button until the pad is fully
-  off, Forget it in Bluetooth settings, hold the pairing button, pair again.
-- **Worked, then stopped after a macOS update.** Apple may have shipped a new controller database,
-  replacing the patched bundle. Run the wizard again (SIP off). If Apple adds the G7 Pro themselves,
-  this project becomes unnecessary.
-- **Worked, then stopped after a pad firmware update.** The entry matches on firmware version. Run the
-  wizard again with the pad connected.
-- **Verify shows red for a control.** Click "Re-capture a control", press it again, Review, Install.
-  If it stays red, open an issue with the red line's text and `g7pro status` output.
-- **Buttons work in Verify but are wrong in one game.** Check System Settings › Game Controllers for
-  a per-app or per-controller remap and reset it; check the game's own controller settings.
+- **The pad blinks although macOS says "Connected", then powers off.** The pad's Bluetooth stack
+  is stuck. Hold the Xbox button until the pad turns off. Forget it in Bluetooth settings. Hold the
+  pairing button. Pair again.
+- **It worked, then stopped after a macOS update.** Apple can ship a new controller database that
+  replaces the patched bundle. Run the wizard again with SIP off.
+- **It worked, then stopped after a pad firmware update.** The entry matches on firmware version.
+  Run the wizard again with the pad connected.
+- **A control lights up in the wrong place in Verify.** Click "Capture again", press that control,
+  then Review and Install.
+- **Buttons work in Verify but not in one game.** Check System Settings › Game Controllers for a
+  per-app remap and reset it. Check the game's own controller settings.
+- **macOS never asks for Input Monitoring, and the app is not in that list.** Click **+** under the
+  list and choose the app.
+
+## How we found it
+
+We streamed `gamecontrollerd`'s debug log while the pad reconnected. The log showed the daemon trying
+the `com.GameSir.X3` entry and rejecting the device. We followed the config service to its MobileAsset
+and found the plist database and its personality format. We validated the patched bundle with the
+framework's own `_GCConfigurationBundle` and `_GCDeviceDBBundle` classes before touching the system.
 
 ## License
 
-Public domain (CC0 1.0) for everything original here: code, scripts, data files, docs. Use it however
-you like, credit optional. Two things aren't ours to give away and are included only for
-interoperability: the controller drawing and wordmark come from GameSir's manual (with Microsoft's Xbox
-logo in it), and the personality file follows Apple's format and derives from Apple's GameSir X3 entry.
-See LICENSE.
+We dedicate everything original here to the public domain (CC0 1.0): code, scripts, data files, docs.
+Use it however you like. Credit is optional. Two things are not ours to give away, and we include them
+only for interoperability. The controller drawing and wordmark come from GameSir's manual, with
+Microsoft's Xbox logo in it. The personality file follows Apple's format and derives from Apple's
+GameSir X3 entry. See LICENSE.
