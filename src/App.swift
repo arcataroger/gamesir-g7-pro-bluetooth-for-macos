@@ -100,8 +100,8 @@ final class Wizard: ObservableObject {
     }
   }
   func back(_ to: Step) { autoAdvance = false; step = to }
-  /// Done for the rail: this step and every step before it are satisfied, so progress reads left to right.
-  func isDone(_ s: Step) -> Bool { Step.allCases.filter { $0.rawValue <= s.rawValue }.allSatisfy { isSatisfied($0) } }
+  /// Done for the rail: satisfied itself, or implied by a later step already being satisfied (e.g. an install on disk).
+  func isDone(_ s: Step) -> Bool { Step.allCases.filter { $0.rawValue >= s.rawValue && $0 != .done }.contains { isSatisfied($0) } }
   /// Whether a step's condition currently holds, independent of where the user is.
   func isSatisfied(_ s: Step) -> Bool {
     switch s {
@@ -240,7 +240,7 @@ final class Wizard: ObservableObject {
       guard let c = controls.first(where: { $0.id == id }) else { return nil }
       let base = c.prompt.components(separatedBy: " (").first ?? c.prompt
       let h = verifyHeld[id]!
-      let pct = c.kind == "axis" || c.id == "lt" || c.id == "rt" ? " \(Int((h.value * 100).rounded()))%" : ""
+      let pct = c.kind == "axis" || c.kind == "trigger" ? " \(Int((h.value * 100).rounded()))%" : ""
       if let d = h.dir { return base.replacingOccurrences(of: " UP", with: "").replacingOccurrences(of: " RIGHT", with: "") + " \(d)" + pct }
       return base + pct
     }.sorted()
@@ -364,7 +364,7 @@ struct HeroPad: View {
     ControllerView(target: nil, captured: [], ok: [], bad: [:], showTargets: false) { _ in }
       .opacity(lit ? 1 : 0.28)
       .animation(.easeOut(duration: 0.6), value: lit)
-      .frame(maxWidth: 720)
+      .frame(maxWidth: 720, maxHeight: 440)
   }
 }
 
@@ -433,7 +433,7 @@ struct CaptureView: View {
     Page(wiz.current.map { "Press \($0.prompt)" } ?? "All captured", wiz.current != nil ? "\(wiz.currentIndex + 1) of \(wiz.mappable.count). Press once, then let go." : nil) {
       VStack(alignment: .leading, spacing: 16) {
         ControllerView(target: wiz.current?.id, captured: Set(wiz.captures.map { $0.controlID }), ok: [], bad: [:], showTargets: true) { wiz.recapture($0) }
-          .frame(maxWidth: 900)
+          .frame(maxWidth: 900, maxHeight: 620)
         VStack(alignment: .leading, spacing: 8) {
           HStack(spacing: 10) {
             Button("Undo last") { wiz.undo() }.disabled(!wiz.canUndo)
@@ -494,7 +494,7 @@ struct VerifyView: View {
     Page("Try it out", "Press anything on the pad. The control macOS delivers to apps lights up, so you can check every button reads the way it should.") {
       VStack(alignment: .leading, spacing: 16) {
         ControllerView(target: nil, lit: wiz.verifyHeld, captured: [], ok: [], bad: [:], showTargets: true) { _ in }
-          .frame(maxWidth: 900)
+          .frame(maxWidth: 900, maxHeight: 620)
         VStack(alignment: .leading, spacing: 8) {
           Text(wiz.verifyStatusText).font(.system(size: 20, weight: .semibold)).lineLimit(2).frame(maxWidth: 900, alignment: .leading)
           if !wiz.frameworkSeesPad { Status(.warn, "macOS isn't reporting the pad as a game controller right now.") }
@@ -639,7 +639,7 @@ struct ControllerView: View {
                   .rotationEffect(.radians(atan2(v.y, v.x) + .pi / 2))
                   .offset(x: v.x * reach, y: v.y * reach)
                 if held != nil && isStick {
-                  Text("\(Int((mag * 100).rounded()))%").font(.system(size: max(11, d * 0.2), weight: .semibold, design: .rounded)).foregroundStyle(.primary)
+                  Text("\(Int((mag * 100).rounded()))%").font(.system(size: max(11, d * 0.2), weight: .semibold, design: .rounded)).foregroundStyle(.primary).fixedSize()
                     .offset(x: v.x * (reach + d * 0.28), y: v.y * (reach + d * 0.28))
                 }
               } else if let g = glyph, g.solid == true, let h = held, c.id.hasSuffix("t") {
@@ -648,8 +648,8 @@ struct ControllerView: View {
                 shp.fill(Color.accentColor.opacity(0.65))
                   .mask(VStack(spacing: 0) { Spacer(minLength: 0); Rectangle().frame(height: fh * CGFloat(h.value)) })
                 shp.stroke(Color.accentColor, lineWidth: 2)
-                Text("\(Int((h.value * 100).rounded()))%").font(.system(size: max(11, w * 0.017), weight: .semibold, design: .rounded)).foregroundStyle(.primary)
-                  .offset(x: c.id == "lt" ? -fw * 0.95 : fw * 0.95)
+                Text("\(Int((h.value * 100).rounded()))%").font(.system(size: max(11, w * 0.017), weight: .semibold, design: .rounded)).foregroundStyle(.primary).fixedSize()
+                  .offset(x: c.id == "lt" ? -fw * 1.1 : fw * 1.1)
               } else if let g = glyph, g.solid != true {
                 // line-art silhouettes: a capsule carries the state; the outline is a stroke on top
                 if isTarget { Capsule().stroke(Color.accentColor, lineWidth: 3).scaleEffect(1 + 0.5 * pulseRipple).opacity(1 - pulseRipple) }

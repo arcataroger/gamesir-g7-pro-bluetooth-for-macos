@@ -71,9 +71,9 @@
  },
  {
   "id": "lt",
-  "prompt": "LT (left trigger)",
+  "prompt": "LT (left trigger, pull fully)",
   "ident": "button.lt",
-  "kind": "button",
+  "kind": "trigger",
   "gc": "L2 Button",
   "x": 0.11,
   "y": -0.13,
@@ -84,9 +84,9 @@
  },
  {
   "id": "rt",
-  "prompt": "RT (right trigger)",
+  "prompt": "RT (right trigger, pull fully)",
   "ident": "button.rt",
-  "kind": "button",
+  "kind": "trigger",
   "gc": "R2 Button",
   "x": 0.89,
   "y": -0.13,

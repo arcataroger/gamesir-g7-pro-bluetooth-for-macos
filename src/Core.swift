@@ -40,6 +40,7 @@ struct RawEvent {
     if usagePage == 9 { return 1 }
     if usagePage == 1 && usage == 0x39 { return 3 }
     if usagePage == 1 && (0x30...0x38).contains(usage) { return 2 }
+    if usagePage == 2 && (usage == 0xC4 || usage == 0xC5) { return 2 }   // Simulation: Accelerator / Brake (analog triggers)
     return 0
   }
   var describeOther: String? {
@@ -113,7 +114,7 @@ enum IndexRule {
     let pool: [ElementInfo]
     switch usageType {
     case 1: pool = elements.filter { $0.usagePage == 9 }
-    case 2: pool = elements.filter { $0.usagePage == 1 && (0x30...0x38).contains($0.usage) }
+    case 2: pool = elements.filter { ($0.usagePage == 1 && (0x30...0x38).contains($0.usage)) || ($0.usagePage == 2 && ($0.usage == 0xC4 || $0.usage == 0xC5)) }
     case 3: pool = elements.filter { $0.usagePage == 1 && $0.usage == 0x39 }
     default: return nil
     }
@@ -145,7 +146,8 @@ enum PressDetector {
     switch kind {
     case "button": return ev.usageType == 1 && ev.value != 0
     case "hat":    return ev.usageType == 3 && (0...8).contains(ev.value) && ev.value != 15
-    case "axis":   return ev.usageType == 2 && (ev.value < 48 || ev.value > 208)
+    case "axis":   return ev.usageType == 2 && ev.usagePage == 1 && (ev.value < 48 || ev.value > 208)
+    case "trigger": return ev.usageType == 2 && ev.usagePage == 2 && ev.value > 128
     default:       return false
     }
   }
