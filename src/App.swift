@@ -22,7 +22,7 @@ struct VerifyState { var ok = Set<String>(); var bad: [String: String] = [:] }
 final class Wizard: ObservableObject {
   @Published var step: Step = .welcome
   @Published var sipEnabled: Bool? = nil
-  @Published var inputMonitoring = HIDSource.hasInputMonitoring()
+  @Published var inputMonitoring = false
   @Published var padConnected = false
   @Published var frameworkSeesPad = false
   @Published var firmware: Int? = nil
@@ -120,7 +120,13 @@ final class Wizard: ObservableObject {
     inputMonitoring = HIDSource.requestInputMonitoring()
     refreshPermission()
   }
-  func refreshPermission() { inputMonitoring = HIDSource.hasInputMonitoring(); if inputMonitoring { startHID() }; advanceIfDone() }
+  private var lastPermissionCheck = Date.distantPast
+  /// One TCC round-trip at most every 2 s: on this macOS a status check can itself surface the prompt.
+  func refreshPermission() {
+    guard Date().timeIntervalSince(lastPermissionCheck) > 2 else { return }
+    lastPermissionCheck = Date()
+    inputMonitoring = HIDSource.hasInputMonitoring(); if inputMonitoring { startHID() }; advanceIfDone()
+  }
   func startHID() {
     let src = HIDSource.shared
     src.onDeviceChange = { [weak self] on in DispatchQueue.main.async { self?.padConnected = on; self?.firmware = src.firmwareVersion; self?.advanceIfDone() } }
@@ -345,20 +351,19 @@ struct WelcomeView: View {
 
 struct PermissionView: View {
   @EnvironmentObject var wiz: Wizard
-  private let poll = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
   var body: some View {
     Page("Let this app read the pad", wiz.inputMonitoring ? nil : "macOS calls this permission Input Monitoring. The wizard only listens for which control you press while it's open.") {
       VStack(alignment: .leading, spacing: 18) {
         if wiz.inputMonitoring { Status(.ok, "Input Monitoring is allowed. You can continue.") }
         else {
           Button("Allow Input Monitoring…") { wiz.requestPermission() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).controlSize(.large)
-          Text("macOS will ask. Choose Open System Settings in its prompt, turn on the switch next to this app, and come back. This page updates by itself.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 560, alignment: .leading)
+          Text("macOS will ask. Choose Open System Settings in its prompt, turn on the switch next to this app, and come back to this window.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 560, alignment: .leading)
         }
         HeroPad(lit: wiz.inputMonitoring)
       }
     } footer: { Nav(back: { wiz.back(.welcome) }, next: { wiz.startHID(); wiz.step = .detect }, nextEnabled: wiz.inputMonitoring) }
     .onAppear { wiz.refreshPermission() }
-    .onReceive(poll) { _ in if !wiz.inputMonitoring { wiz.refreshPermission() } }
+    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in if !wiz.inputMonitoring { wiz.refreshPermission() } }
   }
 }
 
