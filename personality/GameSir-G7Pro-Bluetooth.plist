@@ -44,7 +44,7 @@
 					<key>Identifier</key>
 					<string>button.lt</string>
 					<key>Predicate</key>
-					<string>UsageType == 1 AND UsageTypeIndex == 13</string>
+					<string>UsageType == 2 AND UsageTypeIndex == 8</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
@@ -56,7 +56,7 @@
 					<key>Identifier</key>
 					<string>button.rt</string>
 					<key>Predicate</key>
-					<string>UsageType == 1 AND UsageTypeIndex == 14</string>
+					<string>UsageType == 2 AND UsageTypeIndex == 7</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
@@ -173,14 +173,14 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>TrueExpression</key>
 							<dict>
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>Type</key>
 							<string>SDLHatFunction</string>
@@ -230,14 +230,14 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>4.0</real>
+								<real>4</real>
 							</dict>
 							<key>TrueExpression</key>
 							<dict>
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>Type</key>
 							<string>SDLHatFunction</string>
@@ -287,14 +287,14 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>8.0</real>
+								<real>8</real>
 							</dict>
 							<key>TrueExpression</key>
 							<dict>
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>Type</key>
 							<string>SDLHatFunction</string>
@@ -344,14 +344,14 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>2.0</real>
+								<real>2</real>
 							</dict>
 							<key>TrueExpression</key>
 							<dict>
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>Type</key>
 							<string>SDLHatFunction</string>
@@ -394,7 +394,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -444,7 +444,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -494,7 +494,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -544,7 +544,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -594,7 +594,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -644,7 +644,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -713,7 +713,7 @@
 													<key>Type</key>
 													<string>Constant</string>
 													<key>Value</key>
-													<real>-1.0</real>
+													<real>-1</real>
 												</dict>
 												<key>Type</key>
 												<string>Multiply</string>
@@ -786,7 +786,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -847,7 +847,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -873,7 +873,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -940,7 +940,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -991,7 +991,7 @@
 													<key>Type</key>
 													<string>Constant</string>
 													<key>Value</key>
-													<real>-1.0</real>
+													<real>-1</real>
 												</dict>
 												<key>Type</key>
 												<string>Multiply</string>
@@ -1055,7 +1055,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -1116,7 +1116,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -1142,7 +1142,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -1211,7 +1211,7 @@
 													<key>Type</key>
 													<string>Constant</string>
 													<key>Value</key>
-													<real>-1.0</real>
+													<real>-1</real>
 												</dict>
 												<key>Type</key>
 												<string>Multiply</string>
@@ -1284,7 +1284,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -1345,7 +1345,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -1371,7 +1371,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -1438,7 +1438,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -1489,7 +1489,7 @@
 													<key>Type</key>
 													<string>Constant</string>
 													<key>Value</key>
-													<real>-1.0</real>
+													<real>-1</real>
 												</dict>
 												<key>Type</key>
 												<string>Multiply</string>
@@ -1553,7 +1553,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -1614,7 +1614,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -1640,7 +1640,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -1709,7 +1709,7 @@
 													<key>Type</key>
 													<string>Constant</string>
 													<key>Value</key>
-													<real>-1.0</real>
+													<real>-1</real>
 												</dict>
 												<key>Type</key>
 												<string>Multiply</string>
@@ -1782,7 +1782,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -1843,7 +1843,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -1869,7 +1869,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -1936,7 +1936,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -1987,7 +1987,7 @@
 													<key>Type</key>
 													<string>Constant</string>
 													<key>Value</key>
-													<real>-1.0</real>
+													<real>-1</real>
 												</dict>
 												<key>Type</key>
 												<string>Multiply</string>
@@ -2051,7 +2051,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -2112,7 +2112,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -2138,7 +2138,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -2207,7 +2207,7 @@
 													<key>Type</key>
 													<string>Constant</string>
 													<key>Value</key>
-													<real>-1.0</real>
+													<real>-1</real>
 												</dict>
 												<key>Type</key>
 												<string>Multiply</string>
@@ -2280,7 +2280,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -2341,7 +2341,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -2367,7 +2367,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -2434,7 +2434,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -2485,7 +2485,7 @@
 													<key>Type</key>
 													<string>Constant</string>
 													<key>Value</key>
-													<real>-1.0</real>
+													<real>-1</real>
 												</dict>
 												<key>Type</key>
 												<string>Multiply</string>
@@ -2549,7 +2549,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -2610,7 +2610,7 @@
 												<key>Type</key>
 												<string>Constant</string>
 												<key>Value</key>
-												<real>-1.0</real>
+												<real>-1</real>
 											</dict>
 											<key>Type</key>
 											<string>Multiply</string>
@@ -2636,7 +2636,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -2686,7 +2686,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -2736,7 +2736,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -2786,7 +2786,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -2836,7 +2836,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -2886,7 +2886,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -2936,7 +2936,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -2986,7 +2986,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>
@@ -3036,7 +3036,7 @@
 								<key>Type</key>
 								<string>Constant</string>
 								<key>Value</key>
-								<real>1.0</real>
+								<real>1</real>
 							</dict>
 							<key>OutputMinExpression</key>
 							<dict>

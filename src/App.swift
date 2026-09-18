@@ -44,6 +44,7 @@ final class Wizard: ObservableObject {
   @Published var autoAdvance = true          // cleared when the user navigates backwards by hand
   @Published var entryInstalled = false      // the database already has an entry for this pad
   @Published var permissionRequested = false // after asking once, nothing changes until the app is relaunched
+  @Published var uninstallMode = false       // the red rail item: a screen of its own, outside the step sequence
 
   let device: DeviceSpec
   let controls: [ControlSpec]
@@ -229,7 +230,7 @@ final class Wizard: ObservableObject {
     installing = true
     DispatchQueue.global().async {
       let (ok, out) = Installer.runAsAdmin(executable: self.cliURL, args: ["uninstall"])
-      DispatchQueue.main.async { self.installing = false; self.installOutput = out; if ok { self.installed = false } }
+      DispatchQueue.main.async { self.installing = false; self.installOutput = out; if ok { self.installed = false; self.entryInstalled = false }; self.refreshSystem() }
     }
   }
 
@@ -269,6 +270,7 @@ struct WizardView: View {
       StepRail().frame(width: 236)
       Divider()
       Group {
+        if wiz.uninstallMode { UninstallView() } else {
         switch wiz.step {
         case .welcome: WelcomeView()
         case .permission: PermissionView()
@@ -278,6 +280,7 @@ struct WizardView: View {
         case .install: InstallView()
         case .verify: VerifyView()
         case .done: DoneView()
+        }
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -295,7 +298,7 @@ struct StepRail: View {
       Text("G7 Pro Bluetooth Setup").font(.system(size: 15, weight: .semibold)).foregroundStyle(.secondary)
         .padding(.horizontal, 24).padding(.top, 28).padding(.bottom, 18)
       ForEach(Step.allCases, id: \.rawValue) { s in
-        let done = wiz.isDone(s), current = s == wiz.step
+        let done = wiz.isDone(s), current = s == wiz.step && !wiz.uninstallMode
         HStack(spacing: 12) {
           ZStack {
             Circle().fill(current ? Color.accentColor : (done ? Color.green : Color.clear)).frame(width: 22, height: 22)
@@ -310,9 +313,20 @@ struct StepRail: View {
         .padding(.horizontal, 24).padding(.vertical, 9)
         .background(current ? Color.accentColor.opacity(0.12) : Color.clear)
         .contentShape(Rectangle())
-        .onTapGesture { if done || s.rawValue <= wiz.step.rawValue { wiz.back(s) } }
+        .onTapGesture { wiz.uninstallMode = false; if done || s.rawValue <= wiz.step.rawValue { wiz.back(s) } }
       }
       Spacer()
+      HStack(spacing: 12) {
+        Image(systemName: "trash").font(.system(size: 15, weight: .semibold))
+        Text("Uninstall").font(.system(size: 17, weight: wiz.uninstallMode ? .semibold : .regular))
+        Spacer()
+      }
+      .foregroundStyle(.red)
+      .padding(.horizontal, 24).padding(.vertical, 12)
+      .background(wiz.uninstallMode ? Color.red.opacity(0.12) : Color.clear)
+      .contentShape(Rectangle())
+      .onTapGesture { wiz.autoAdvance = false; wiz.uninstallMode = true }
+      .padding(.bottom, 12)
     }
     .background(Color.primary.opacity(0.035))
   }
@@ -518,12 +532,31 @@ struct DoneView: View {
           Text("Restart into Recovery the same way as before, open Utilities › Terminal, run  csrutil enable  and restart. Everything installed stays in place.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 600, alignment: .leading)
         }
         Text("Run this wizard again if a macOS update replaces Apple's controller list or you update the pad's firmware. Your capture is saved.").font(.system(size: 15)).foregroundStyle(.tertiary).frame(maxWidth: 600, alignment: .leading)
-        if !wiz.installOutput.isEmpty && wiz.installing == false && !wiz.installed { Text(wiz.installOutput).font(.system(size: 13, design: .monospaced)).foregroundStyle(.secondary) }
         HeroPad(lit: true)
       }
     } footer: {
-      HStack { Button("Remove the entry") { wiz.uninstall() }.disabled(wiz.installing || wiz.sipEnabled == true); Spacer(); Button("Quit") { NSApp.terminate(nil) }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent) }.controlSize(.large)
+      HStack { Spacer(); Button("All done. Game on!") { NSApp.terminate(nil) }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent) }.controlSize(.large)
     }
+  }
+}
+
+struct UninstallView: View {
+  @EnvironmentObject var wiz: Wizard
+  var body: some View {
+    Page("Uninstall", "Removes the G7 Pro from Apple's controller list and deletes the mapping this wizard installed, then restarts the controller service. The pad goes back to being paired but invisible to games. Your saved capture stays on disk, so reinstalling later is quick.") {
+      VStack(alignment: .leading, spacing: 18) {
+        if !wiz.entryInstalled {
+          Status(.ok, "Nothing is installed.")
+        } else if wiz.sipEnabled == true {
+          Status(.warn, "System Integrity Protection is on, so the list can't be edited. Turn it off from Recovery (the Welcome step explains how) and come back.")
+        } else {
+          Status(.info, "macOS will ask for an administrator password.")
+          Button(wiz.installing ? "Uninstalling…" : "Uninstall") { wiz.uninstall() }.disabled(wiz.installing).buttonStyle(.borderedProminent).tint(.red).controlSize(.large)
+        }
+        if !wiz.installOutput.isEmpty { ScrollView { Text(wiz.installOutput).font(.system(size: 13, design: .monospaced)).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading).padding(10) }.frame(maxWidth: 760, maxHeight: 130).background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 10)) }
+        HeroPad(lit: false)
+      }
+    } footer: { HStack { Button("Back") { wiz.uninstallMode = false }.controlSize(.large); Spacer() } }
   }
 }
 

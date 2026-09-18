@@ -1,0 +1,153 @@
+{
+  "capturedAt" : "2026-09-18T09:21:44Z",
+  "captures" : [
+    {
+      "controlID" : "a",
+      "cookie" : 29,
+      "reportID" : 7,
+      "usage" : 1,
+      "usagePage" : 9,
+      "usageType" : 1
+    },
+    {
+      "controlID" : "b",
+      "cookie" : 30,
+      "reportID" : 7,
+      "usage" : 2,
+      "usagePage" : 9,
+      "usageType" : 1
+    },
+    {
+      "controlID" : "x",
+      "cookie" : 32,
+      "reportID" : 7,
+      "usage" : 4,
+      "usagePage" : 9,
+      "usageType" : 1
+    },
+    {
+      "controlID" : "y",
+      "cookie" : 33,
+      "reportID" : 7,
+      "usage" : 5,
+      "usagePage" : 9,
+      "usageType" : 1
+    },
+    {
+      "controlID" : "lb",
+      "cookie" : 35,
+      "reportID" : 7,
+      "usage" : 7,
+      "usagePage" : 9,
+      "usageType" : 1
+    },
+    {
+      "controlID" : "rb",
+      "cookie" : 36,
+      "reportID" : 7,
+      "usage" : 8,
+      "usagePage" : 9,
+      "usageType" : 1
+    },
+    {
+      "controlID" : "lt",
+      "cookie" : 336,
+      "reportID" : 7,
+      "usage" : 197,
+      "usagePage" : 2,
+      "usageType" : 2
+    },
+    {
+      "controlID" : "rt",
+      "cookie" : 335,
+      "reportID" : 7,
+      "usage" : 196,
+      "usagePage" : 2,
+      "usageType" : 2
+    },
+    {
+      "controlID" : "l3",
+      "cookie" : 42,
+      "reportID" : 7,
+      "usage" : 14,
+      "usagePage" : 9,
+      "usageType" : 1
+    },
+    {
+      "controlID" : "r3",
+      "cookie" : 43,
+      "reportID" : 7,
+      "usage" : 15,
+      "usagePage" : 9,
+      "usageType" : 1
+    },
+    {
+      "controlID" : "view",
+      "cookie" : 39,
+      "reportID" : 7,
+      "usage" : 11,
+      "usagePage" : 9,
+      "usageType" : 1
+    },
+    {
+      "controlID" : "menu",
+      "cookie" : 40,
+      "reportID" : 7,
+      "usage" : 12,
+      "usagePage" : 9,
+      "usageType" : 1
+    },
+    {
+      "controlID" : "dpad.up",
+      "cookie" : 334,
+      "reportID" : 7,
+      "usage" : 57,
+      "usagePage" : 1,
+      "usageType" : 3
+    },
+    {
+      "controlID" : "dpad.right",
+      "cookie" : 334,
+      "reportID" : 7,
+      "usage" : 57,
+      "usagePage" : 1,
+      "usageType" : 3
+    },
+    {
+      "controlID" : "ls.up",
+      "cookie" : 331,
+      "reportID" : 7,
+      "usage" : 49,
+      "usagePage" : 1,
+      "usageType" : 2
+    },
+    {
+      "controlID" : "ls.right",
+      "cookie" : 330,
+      "reportID" : 7,
+      "usage" : 48,
+      "usagePage" : 1,
+      "usageType" : 2
+    },
+    {
+      "controlID" : "rs.up",
+      "cookie" : 333,
+      "reportID" : 7,
+      "usage" : 53,
+      "usagePage" : 1,
+      "usageType" : 2
+    },
+    {
+      "controlID" : "rs.right",
+      "cookie" : 332,
+      "reportID" : 7,
+      "usage" : 50,
+      "usagePage" : 1,
+      "usageType" : 2
+    }
+  ],
+  "device" : "GameSir G7 Pro (Bluetooth mode)",
+  "firmwareVersion" : 283,
+  "productID" : 4130,
+  "vendorID" : 13623
+}
