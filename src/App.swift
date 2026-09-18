@@ -553,7 +553,7 @@ struct ControllerView: View {
             }
             .frame(width: d * widthFactor(c.shape), height: d)
             .scaleEffect(isTarget ? 1 + 0.08 * pulse : 1)
-            .opacity(isTarget ? 0.55 + 0.45 * pulse : 1)
+            .opacity(isTarget ? 0.7 + 0.3 * pulse : 1)
             .position(x: c.x * w, y: top + c.y * artH)
             .contentShape(Rectangle())
             .onTapGesture { onClick(sibs.first { $0.isMappable }?.id ?? c.id) }
@@ -575,12 +575,12 @@ struct ControllerView: View {
   private func stateFor(_ sibs: [ControlSpec]) -> S {
     let ids = Set(sibs.map { $0.id })
     let bg = scheme == .dark ? Color.black : Color.white
-    if let t = target, ids.contains(t) { return S(fill: .accentColor, stroke: .white, width: 2, text: .white) }
+    if let t = target, ids.contains(t) { return S(fill: .accentColor.opacity(0.45), stroke: .accentColor, width: 2.5, text: .white) }
     if let l = lit, ids.contains(l) { return S(fill: .yellow.opacity(0.55), stroke: .yellow, width: 2, text: .black) }
     if !ids.isDisjoint(with: Set(bad.keys)) { return S(fill: .red.opacity(0.5), stroke: .red, width: 2, text: .white) }
     if !ids.isDisjoint(with: ok) { return S(fill: .green.opacity(0.35), stroke: .green, width: 2, text: .white, check: true) }
     // captured: recede into the background and mark done
-    if !ids.isDisjoint(with: captured) { return S(fill: bg.opacity(0.72), stroke: .secondary.opacity(0.35), width: 1, text: .secondary.opacity(0.7), check: true) }
+    if !ids.isDisjoint(with: captured) { return S(fill: bg.opacity(0.5), stroke: .secondary.opacity(0.35), width: 1, text: .secondary.opacity(0.7), check: true) }
     if sibs.allSatisfy({ !$0.isMappable }) { return S(fill: .clear, stroke: .clear, width: 0, text: .secondary) }
     return S(fill: .clear, stroke: .secondary.opacity(0.5), width: 1, text: .primary)
   }
