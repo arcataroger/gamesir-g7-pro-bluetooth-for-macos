@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/arcataroger/gamesir-g7-pro-bluetooth-for-macos/schemas/controls.schema.json",
+  "title": "Controls",
+  "description": "The controls the wizard walks through, in capture order, with their drawing positions. Read by Core.swift (ControlSpec) and App.swift. File: data/controls.json.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "prompt", "ident", "kind", "gc", "x", "y", "shape", "label"],
+    "additionalProperties": false,
+    "properties": {
+      "id": { "type": "string", "description": "Unique key, e.g. \"a\", \"dpad.up\", \"ls.right\". Captures and verify state refer to it." },
+      "prompt": { "type": "string", "description": "What the wizard asks the user to press, e.g. \"LB (left bumper)\"." },
+      "ident": { "type": "string", "description": "Element identifier inside the personality plist, e.g. \"button.lb\" or \"thumbstick.left.y\". Empty for controls the personality cannot map." },
+      "kind": {
+        "type": "string",
+        "enum": ["button", "axis", "hat", "trigger", "system"],
+        "description": "How a raw report counts as a press. button: HID button usage. axis: generic-desktop axis (sticks). hat: hat switch (D-pad). trigger: Simulation Accelerator/Brake, captured analog. system: not mappable (Xbox button, Share); shown in the drawing only."
+      },
+      "gc": { "type": "string", "description": "The element name Apple's GameController framework reports (localizedName), e.g. \"A Button\", \"Left Thumbstick\". Verify matches delivered events against it." },
+      "gcDir": { "type": "string", "enum": ["up", "down", "left", "right"], "description": "For pads and sticks: the direction this control represents. Sets the highlighted edge and the arrow." },
+      "x": { "type": "number", "minimum": 0, "maximum": 1, "description": "Centre of the hit target, as a fraction of the drawing width. Computed from the SVG's geometry, not measured by eye. Callouts can sit outside the art." },
+      "y": { "type": "number", "description": "Centre as a fraction of the drawing height. Negative values place callouts above the art." },
+      "shape": {
+        "type": "string",
+        "enum": ["circle", "circle-sm", "stick", "dpad", "pill", "callout"],
+        "description": "Hit-target shape and size class. callout draws the silhouette from data/callout-glyphs.json keyed by id."
+      },
+      "label": { "type": "string", "description": "Text drawn on the target, e.g. \"L3\". Empty when the art already carries the glyph." },
+      "ax": { "type": "number", "description": "For callouts: x of the leader line's anchor on the art, as a fraction of the drawing width." },
+      "ay": { "type": "number", "description": "For callouts: y of the anchor on the art, as a fraction of the drawing height." }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/arcataroger/gamesir-g7-pro-bluetooth-for-macos/schemas/device.schema.json",
+  "title": "Device",
+  "description": "Identity of the pad and where its database entry and mapping live. Read by Core.swift (DeviceSpec) and Install.swift. File: data/device.json.",
+  "type": "object",
+  "required": ["name", "vendorID", "productID", "identifier", "compatibilityVersion", "personalityTemplate", "personalityInstallPath"],
+  "additionalProperties": false,
+  "properties": {
+    "name": { "type": "string", "description": "Human-readable name shown in the wizard, e.g. \"GameSir G7 Pro (Bluetooth mode)\"." },
+    "vendorID": { "type": "integer", "description": "USB/Bluetooth vendor ID as a decimal integer. GameSir is 13623 (0x3537). The database entry matches on it." },
+    "productID": { "type": "integer", "description": "Product ID as a decimal integer. The G7 Pro in Bluetooth mode is 4130 (0x1022). The database entry matches on it." },
+    "identifier": { "type": "string", "description": "Reverse-DNS identifier for our entry in Apple's GameControllers-Custom.bundle Info.plist, e.g. \"com.GameSir.G7Pro.Bluetooth\". install/uninstall find the entry by this string." },
+    "compatibilityVersion": { "type": "string", "description": "Value Apple's database uses to gate personality features. Copy it from an existing entry; \"10.1.36\" matches the GameSir X3 entry we derive from." },
+    "personalityTemplate": { "type": "string", "description": "Repo-relative path to the personality plist the wizard rewrites, e.g. \"personality/GameSir-G7Pro-Bluetooth.plist\"." },
+    "personalityInstallPath": { "type": "string", "description": "Path inside the Custom bundle where the personality is installed, e.g. \"Personalities/GameSir/G7Pro/Bluetooth.plist\". The Info.plist entry references it." },
+    "notes": { "type": "array", "items": { "type": "string" }, "description": "Free-text facts about the pad for humans. Not read by code." }
+  }
+}

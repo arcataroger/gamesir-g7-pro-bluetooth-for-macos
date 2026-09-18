@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/arcataroger/gamesir-g7-pro-bluetooth-for-macos/schemas/mapping.schema.json",
+  "title": "Mapping",
+  "description": "A capture: what the pad sent for each control. The wizard writes it as mapping.json in ~/Library/Application Support/G7Pro Bluetooth Setup/. data/reference-mapping.json is a verified capture the wizard double-checks new presses against. Read by Core.swift (MappingFile).",
+  "type": "object",
+  "required": ["device", "vendorID", "productID", "capturedAt", "captures"],
+  "additionalProperties": false,
+  "properties": {
+    "device": { "type": "string", "description": "The device name from data/device.json at capture time." },
+    "vendorID": { "type": "integer", "description": "Vendor ID of the captured pad." },
+    "productID": { "type": "integer", "description": "Product ID of the captured pad." },
+    "firmwareVersion": { "type": ["integer", "null"], "description": "The pad's VersionNumber at capture time. The database entry must match it." },
+    "capturedAt": { "type": "string", "format": "date-time", "description": "When the capture finished, ISO 8601." },
+    "captures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["controlID", "usageType", "cookie", "usagePage", "usage", "reportID"],
+        "additionalProperties": false,
+        "properties": {
+          "controlID": { "type": "string", "description": "The control's id from data/controls.json." },
+          "usageType": { "type": "integer", "enum": [1, 2, 3], "description": "Apple's element class: 1 button, 2 axis, 3 hat. Matches the UsageType in a personality predicate." },
+          "cookie": { "type": "integer", "description": "IOKit element cookie in the session that captured it. Stable within one connection only; the index rule uses it against the live element list." },
+          "usagePage": { "type": "integer", "description": "HID usage page of the element: 9 buttons, 1 generic desktop (axes, hat), 2 simulation (analog triggers)." },
+          "usage": { "type": "integer", "description": "HID usage within the page, e.g. button number, 0x30 X axis, 0xC4 Accelerator." },
+          "reportID": { "type": "integer", "description": "HID report ID the element belongs to. Informational." }
+        }
+      }
+    }
+  }
+}

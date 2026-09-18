@@ -28,6 +28,9 @@ Layers, top to bottom:
 
 Rule: put logic in Core or in data, never in a view.
 
+`schemas/` holds a JSON Schema for each data file and describes every field. Update the schema when
+you add a field, and keep the Swift Codable structs in Core.swift in step with it.
+
 ## Build and run
 
 1. Install the Xcode Command Line Tools. You do not need Xcode.

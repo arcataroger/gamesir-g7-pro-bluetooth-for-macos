@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/arcataroger/gamesir-g7-pro-bluetooth-for-macos/schemas/callout-glyphs.schema.json",
+  "title": "Callout glyphs",
+  "description": "Silhouettes for controls drawn outside the main art (triggers and bumpers), keyed by control id. Traced from the manual's top view by tools/pdfpaths.swift plus a flood-fill trace, rotated upright. Read by App.swift (Glyphs). File: data/callout-glyphs.json.",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "required": ["aspect", "paths"],
+    "additionalProperties": false,
+    "properties": {
+      "aspect": { "type": "number", "exclusiveMinimum": 0, "description": "Height divided by width of the glyph's bounding box. The renderer sizes the frame from the width and this ratio." },
+      "paths": {
+        "type": "array",
+        "items": { "type": "string", "pattern": "^M " },
+        "description": "SVG-style path data normalised to a 0–1 box: tokens M, L, C, Z with space-separated coordinates. Solid glyphs hold one closed polygon."
+      },
+      "solid": { "type": "boolean", "description": "true when the glyph is a filled silhouette (one closed outline). false or absent means line art drawn as strokes over a capsule." }
+    }
+  }
+}

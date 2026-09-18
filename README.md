@@ -99,6 +99,7 @@ data/controls.json         the controls the wizard walks through: prompts, ident
 data/callout-glyphs.json   silhouettes of the triggers and bumpers, traced from the manual's top view
 data/controller-front.svg  the pad's front view, extracted from the vector art in GameSir's manual
 data/reference-mapping.json a verified capture; the wizard double-checks presses against it
+schemas/*.schema.json      JSON Schema for each data file, with a description of every field
 personality/…plist         the personality template (derived from Apple's GameSir X3 entry)
 src/Core.swift             headless logic: raw HID, framework observer, the index rule, capture → personality
 src/Install.swift          database patching and daemon restart (runs as root)
