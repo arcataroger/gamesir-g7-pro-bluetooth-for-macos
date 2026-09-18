@@ -86,6 +86,19 @@ final class Wizard: ObservableObject {
     }
   }
   func back(_ to: Step) { autoAdvance = false; step = to }
+  /// Whether a step's condition currently holds, independent of where the user is.
+  func isSatisfied(_ s: Step) -> Bool {
+    switch s {
+    case .welcome: return sipEnabled == false
+    case .permission: return inputMonitoring
+    case .detect: return padConnected
+    case .capture: return !mappable.isEmpty && mappable.allSatisfy { m in captures.contains { $0.controlID == m.id } }
+    case .review: return !captures.isEmpty && FileManager.default.fileExists(atPath: personalityURL.path)
+    case .install: return installed || (entryInstalled && frameworkSeesPad)
+    case .verify: return !mappable.isEmpty && verify.ok.count == mappable.count
+    case .done: return false
+    }
+  }
   /// Called whenever something completes; moves forward past steps that are already satisfied.
   func advanceIfDone() {
     guard autoAdvance else { return }
@@ -235,7 +248,7 @@ struct StepRail: View {
       Text("G7 Pro Bluetooth Setup").font(.system(size: 15, weight: .semibold)).foregroundStyle(.secondary)
         .padding(.horizontal, 24).padding(.top, 28).padding(.bottom, 18)
       ForEach(Step.allCases, id: \.rawValue) { s in
-        let done = s.rawValue < wiz.step.rawValue, current = s == wiz.step
+        let done = wiz.isSatisfied(s), current = s == wiz.step
         HStack(spacing: 12) {
           ZStack {
             Circle().fill(current ? Color.accentColor : (done ? Color.green : Color.clear)).frame(width: 22, height: 22)
@@ -250,7 +263,7 @@ struct StepRail: View {
         .padding(.horizontal, 24).padding(.vertical, 9)
         .background(current ? Color.accentColor.opacity(0.12) : Color.clear)
         .contentShape(Rectangle())
-        .onTapGesture { if done { wiz.back(s) } }
+        .onTapGesture { if done || s.rawValue <= wiz.step.rawValue { wiz.back(s) } }
       }
       Spacer()
     }
@@ -311,10 +324,10 @@ struct HeroPad: View {
 struct WelcomeView: View {
   @EnvironmentObject var wiz: Wizard
   var body: some View {
-    Page("Make your G7 Pro work over Bluetooth", "macOS pairs this pad but games can't see it, because it's missing from Apple's controller list. This wizard records how your pad's buttons are wired, adds the missing entry, and checks the result. Nothing keeps running afterwards.") {
+    Page("Make your G7 Pro work over Bluetooth", wiz.sipEnabled == false ? nil : "macOS pairs this pad but games can't see it, because it's missing from Apple's controller list. This wizard records how your pad's buttons are wired, adds the missing entry, and checks the result. Nothing keeps running afterwards.") {
       VStack(alignment: .leading, spacing: 18) {
         switch wiz.sipEnabled {
-        case .some(false): Status(.ok, "System Integrity Protection is off, which the install step needs.")
+        case .some(false): Status(.ok, "System Integrity Protection is off. You can continue.")
         case .some(true):
           Status(.warn, "System Integrity Protection is on. The list this wizard edits is locked while it is.")
           VStack(alignment: .leading, spacing: 8) {
@@ -334,9 +347,9 @@ struct PermissionView: View {
   @EnvironmentObject var wiz: Wizard
   private let poll = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
   var body: some View {
-    Page("Let this app read the pad", "macOS calls this permission Input Monitoring. The wizard only listens for which control you press while it's open.") {
+    Page("Let this app read the pad", wiz.inputMonitoring ? nil : "macOS calls this permission Input Monitoring. The wizard only listens for which control you press while it's open.") {
       VStack(alignment: .leading, spacing: 18) {
-        if wiz.inputMonitoring { Status(.ok, "Input Monitoring is allowed.") }
+        if wiz.inputMonitoring { Status(.ok, "Input Monitoring is allowed. You can continue.") }
         else {
           Button("Allow Input Monitoring…") { wiz.requestPermission() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).controlSize(.large)
           Text("macOS asks the first time. If nothing appears, the Input Monitoring settings open instead: turn on the switch next to this app. This page updates by itself.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 560, alignment: .leading)
@@ -354,7 +367,7 @@ struct DetectView: View {
   var body: some View {
     Page("Connect the pad", wiz.padConnected ? nil : "Slide the mode switch to Bluetooth, press the Xbox button, and pair it in System Settings › Bluetooth if you haven't. A solid light means it's connected.") {
       VStack(alignment: .leading, spacing: 18) {
-        if wiz.padConnected { Status(.ok, "G7 Pro connected, firmware \(wiz.firmware ?? 0).") } else { Status(.wait, "Looking for the pad…") }
+        if wiz.padConnected { Status(.ok, "G7 Pro connected (firmware \(wiz.firmware ?? 0)). You can continue.") } else { Status(.wait, "Looking for the pad…") }
         if wiz.frameworkSeesPad { Status(.info, "macOS already treats it as a game controller, so an entry is installed. Capture again to fix the mapping, or skip to Verify.") }
         HeroPad(lit: wiz.padConnected)
       }
@@ -412,7 +425,7 @@ struct InstallView: View {
     Page(wiz.installed ? "Installed" : "Add the pad to Apple's controller list", wiz.installed ? nil : "This writes the entry and your mapping into the system database and restarts the controller service. macOS asks for an administrator password.") {
       VStack(alignment: .leading, spacing: 18) {
         if wiz.installed {
-          Status(wiz.frameworkSeesPad ? .ok : .wait, wiz.frameworkSeesPad ? "macOS now reports the pad as a game controller." : "Waiting for macOS to pick the pad up…")
+          Status(wiz.frameworkSeesPad ? .ok : .wait, wiz.frameworkSeesPad ? "Installed. macOS reports the pad as a game controller. You can continue." : "Installed. Waiting for macOS to pick the pad up…")
         } else if wiz.sipEnabled == true {
           Status(.warn, "System Integrity Protection is on, so the write would be refused. Turn it off (Welcome explains how) and reopen the app; your capture is saved.")
         } else {
