@@ -28,6 +28,13 @@ final class Wizard: ObservableObject {
   @Published var firmware: Int? = nil
   @Published var captures: [Capture] = []
   @Published var currentIndex = 0
+  @Published var pendingConfirm: Capture? = nil      // a press that disagreed with the reference mapping; awaiting a second press
+  /// The verified reference mapping (data/reference-mapping.json): raw usage per control, used to spot mis-presses.
+  private lazy var reference: [String: (UInt32, UInt32)] = {
+    guard let u = Bundle.main.resourceURL?.appendingPathComponent("data/reference-mapping.json"),
+          let d = try? Data(contentsOf: u), let m = try? JSONDecoder().decode(MappingFile.self, from: d) else { return [:] }
+    return Dictionary(uniqueKeysWithValues: m.captures.map { ($0.controlID, ($0.usagePage, $0.usage)) })
+  }()
   @Published var lastRawText = ""
   @Published var litControl: String? = nil            // control lit by the most recent raw event
   @Published var changes: [PersonalityWriter.Change] = []
@@ -157,7 +164,7 @@ final class Wizard: ObservableObject {
   }
 
   // MARK: capture
-  func beginCapture() { captures = []; currentIndex = 0; step = .capture }
+  func beginCapture() { captures = []; currentIndex = 0; pendingConfirm = nil; step = .capture }
   private func rawEvent(_ ev: RawEvent) {
     if step == .verify {
       if ev.usagePage == 12 && ev.usage == 0x223 {          // AC Home = Xbox button
@@ -186,8 +193,21 @@ final class Wizard: ObservableObject {
     guard step == .capture, let c = current, activeNow, !wasActive, PressDetector.matches(ev, kind: c.kind) else { return }
     if c.kind == "axis" && axisDir(ev.value) != expectedAxisDir(c) { return }   // wrong direction on the right axis: ignore
     if c.kind == "hat" && hatDir(ev.value) != hatDir(for: c.id) { return }
+    let cap = Capture(controlID: c.id, usageType: ev.usageType, cookie: ev.cookie, usagePage: ev.usagePage, usage: ev.usage, reportID: ev.reportID)
+    if let pending = pendingConfirm {
+      // second press for a control that disagreed with the reference
+      pendingConfirm = nil
+      if pending.usagePage == cap.usagePage && pending.usage == cap.usage {
+        captures.removeAll { $0.controlID == c.id }; captures.append(cap); litControl = c.id; advance()   // consistent: a real difference
+      }
+      return   // inconsistent: the first was a mis-press; prompt for this control again from scratch
+    }
+    if let ref = reference[c.id], ref.0 != cap.usagePage || ref.1 != cap.usage {
+      pendingConfirm = cap   // ask once more before accepting a press that differs from the reference
+      return
+    }
     captures.removeAll { $0.controlID == c.id }
-    captures.append(Capture(controlID: c.id, usageType: ev.usageType, cookie: ev.cookie, usagePage: ev.usagePage, usage: ev.usage, reportID: ev.reportID))
+    captures.append(cap)
     litControl = c.id
     advance()
   }
@@ -201,8 +221,8 @@ final class Wizard: ObservableObject {
     currentIndex = i
     if i >= mappable.count { review() }
   }
-  func undo() { guard let last = captures.popLast(), let i = mappable.firstIndex(where: { $0.id == last.controlID }) else { return }; currentIndex = i }
-  func recapture(_ id: String) { guard step == .capture || step == .review, let i = mappable.firstIndex(where: { $0.id == id }) else { return }; captures.removeAll { $0.controlID == id }; currentIndex = i; step = .capture }
+  func undo() { pendingConfirm = nil; guard let last = captures.popLast(), let i = mappable.firstIndex(where: { $0.id == last.controlID }) else { return }; currentIndex = i }
+  func recapture(_ id: String) { guard step == .capture || step == .review, let i = mappable.firstIndex(where: { $0.id == id }) else { return }; pendingConfirm = nil; captures.removeAll { $0.controlID == id }; currentIndex = i; step = .capture }
   // axis direction: "up" = low value on Y, "right" = high value on X (HID convention: 0 = up/left)
   private func axisDir(_ v: Int) -> String { v < 48 ? "low" : "high" }
   private func expectedAxisDir(_ c: ControlSpec) -> String { c.gcDir == "up" || c.gcDir == "left" ? "low" : "high" }
@@ -454,7 +474,8 @@ struct DetectView: View {
 struct CaptureView: View {
   @EnvironmentObject var wiz: Wizard
   var body: some View {
-    Page(wiz.current.map { "Press \($0.prompt)" } ?? "All captured", wiz.current != nil ? "\(wiz.currentIndex + 1) of \(wiz.mappable.count). Press once, then let go." : nil) {
+    Page(wiz.current.map { wiz.pendingConfirm != nil ? "Let's double-check that" : "Press \($0.prompt)" } ?? "All captured",
+         wiz.current.map { c in wiz.pendingConfirm != nil ? "That wasn't what this pad usually sends for \(c.prompt). Press \(c.prompt) once more; if it matches, it's kept." : "\(wiz.currentIndex + 1) of \(wiz.mappable.count). Press once, then let go." }) {
       VStack(alignment: .leading, spacing: 16) {
         ControllerView(target: wiz.current?.id, captured: Set(wiz.captures.map { $0.controlID }), ok: [], bad: [:], showTargets: true) { wiz.recapture($0) }
           .frame(maxWidth: 900, maxHeight: 620)
