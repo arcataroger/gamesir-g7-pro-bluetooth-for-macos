@@ -1,3 +1,5 @@
+> **Made with AI (Claude) under human supervision.**
+
 # GameSir G7 Pro over Bluetooth on macOS
 
 Makes the GameSir G7 Pro work as a real game controller on macOS when connected over **Bluetooth**:
