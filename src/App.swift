@@ -404,7 +404,7 @@ struct Page<Content: View, Footer: View>: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       Text(title).font(.system(size: 34, weight: .bold)).padding(.bottom, 10)
-      if let st = subtitle { Text(st).font(.system(size: 17)).foregroundStyle(.secondary).frame(maxWidth: 640, alignment: .leading).padding(.bottom, 26) }
+      if let st = subtitle { Text(st).font(.system(size: 17)).foregroundStyle(.secondary).lineLimit(2).frame(maxWidth: 640, minHeight: 46, alignment: .topLeading).padding(.bottom, 26) }
       content().frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
       footer().padding(.top, 20)
     }
@@ -508,7 +508,7 @@ struct CaptureView: View {
   @EnvironmentObject var wiz: Wizard
   var body: some View {
     Page(wiz.current.map { wiz.pendingConfirm != nil ? "Let's double-check that" : "Press \($0.prompt)" } ?? "All captured",
-         wiz.current.map { c in wiz.pendingConfirm != nil ? "That wasn't what this pad usually sends for \(c.prompt). Press \(c.prompt) once more; if it matches, it's kept." : "\(wiz.currentIndex + 1) of \(wiz.mappable.count). Press once, then let go." }) {
+         wiz.current.map { c in wiz.pendingConfirm != nil ? "That wasn't what this pad usually sends for \(c.prompt). Press \(c.prompt) once more; if it matches, it's kept." : "\(wiz.currentIndex + 1) of \(wiz.mappable.count). Press once, then let go." } ?? " ") {
       VStack(alignment: .leading, spacing: 16) {
         ControllerView(target: wiz.current?.id, captured: Set(wiz.captures.map { $0.controlID }), ok: [], bad: [:], showTargets: true) { wiz.recapture($0) }
           .frame(maxWidth: 900, maxHeight: 620)
@@ -557,10 +557,18 @@ struct InstallView: View {
         } else if wiz.sipEnabled == true {
           Status(.warn, "System Integrity Protection is on, so the write would be refused. Turn it off (Welcome explains how) and reopen the app; your capture is saved.")
         } else {
-          Button(wiz.installing ? "Installing…" : "Install") { wiz.install() }.disabled(wiz.installing).keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).controlSize(.large)
+          Button(action: { wiz.install() }) {
+            HStack(spacing: 12) {
+              if wiz.installing { ProgressView().controlSize(.small) } else { Image(systemName: "arrow.down.circle.fill").font(.system(size: 24)) }
+              Text(wiz.installing ? "Installing…" : "Install").font(.system(size: 24, weight: .semibold))
+            }
+            .padding(.horizontal, 36).padding(.vertical, 16)
+          }
+          .disabled(wiz.installing).keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).controlSize(.large)
+          .padding(.top, 12)
         }
         if !wiz.installOutput.isEmpty { ScrollView { Text(wiz.installOutput).font(.system(size: 13, design: .monospaced)).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading).padding(10) }.frame(maxWidth: 760, maxHeight: 130).background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 10)) }
-        HeroPad(lit: wiz.installed && wiz.frameworkSeesPad)
+        if wiz.installed { HeroPad(lit: wiz.frameworkSeesPad) }
       }
     } footer: { Nav(back: { wiz.back(.review) }, next: { wiz.beginVerify() }, nextEnabled: wiz.installed || wiz.frameworkSeesPad) }
   }
