@@ -2,15 +2,37 @@
 import SwiftUI
 import AppKit
 
+/// Trims the menu bar to what this app actually offers: the app menu, Edit (Undo Capture), Window, Help.
+final class MenuTrimmer: NSObject, NSApplicationDelegate {
+  func applicationDidFinishLaunching(_ n: Notification) { trim(); for d in [0.2, 0.8, 2.0] { DispatchQueue.main.asyncAfter(deadline: .now() + d) { self.trim() } } }
+  func applicationDidBecomeActive(_ n: Notification) { trim() }
+  private func trim() {
+    guard let menu = NSApp.mainMenu else { return }
+    for title in ["File", "View"] { if let item = menu.items.first(where: { $0.title == title }) { menu.removeItem(item) } }
+  }
+}
+
 @main
 struct G7ProSetupApp: App {
+  @NSApplicationDelegateAdaptor(MenuTrimmer.self) private var delegate
   @StateObject private var wiz = Wizard()
   var body: some Scene {
     WindowGroup("GameSir G7 Pro Bluetooth Setup") {
       WizardView().environmentObject(wiz).font(.system(size: 17)).frame(minWidth: 1040, minHeight: 720)
     }
     .windowResizability(.contentSize)
-    .commands { CommandGroup(replacing: .undoRedo) { Button("Undo Capture") { wiz.undo() }.keyboardShortcut("z", modifiers: .command).disabled(!wiz.canUndo) } }
+    .commands {
+      CommandGroup(replacing: .newItem) {}
+      CommandGroup(replacing: .saveItem) {}
+      CommandGroup(replacing: .pasteboard) {}
+      CommandGroup(replacing: .textEditing) {}
+      CommandGroup(replacing: .toolbar) {}
+      CommandGroup(replacing: .sidebar) {}
+      CommandGroup(replacing: .undoRedo) { Button("Undo Capture") { wiz.undo() }.keyboardShortcut("z", modifiers: .command).disabled(!wiz.canUndo) }
+      CommandGroup(replacing: .help) {
+        Button("GameSir G7 Pro Bluetooth Setup Help") { NSWorkspace.shared.open(URL(string: "https://github.com/arcataroger/gamesir-g7-pro-bluetooth-for-macos#readme")!) }
+      }
+    }
   }
 }
 
@@ -144,6 +166,15 @@ final class Wizard: ObservableObject {
     // macOS shows its prompt once per process. Later clicks go straight to the Input Monitoring pane.
     // The grant only takes effect for a fresh process, so there is nothing to poll for afterwards.
     if permissionRequested { SystemState.openInputMonitoringSettings(); return }
+    // A request made before the app is active can be dropped silently by macOS; wait for activation first.
+    guard NSApp.isActive else {
+      var token: NSObjectProtocol?
+      token = NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+        if let t = token { NotificationCenter.default.removeObserver(t) }
+        self?.requestPermission()
+      }
+      return
+    }
     permissionRequested = true
     inputMonitoring = HIDSource.requestInputMonitoring()
     if inputMonitoring { startHID(); advanceIfDone() }
@@ -444,7 +475,7 @@ struct PermissionView: View {
         if wiz.inputMonitoring { Status(.ok, "Input Monitoring is allowed. You can continue.") }
         else if wiz.permissionRequested {
           Status(.wait, "Waiting for you to turn it on.")
-          Text("Turn on the switch next to this app in System Settings › Privacy & Security › Input Monitoring, then quit and reopen this app. It will continue from here.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 560, alignment: .leading)
+          Text("Turn on the switch next to this app in System Settings › Privacy & Security › Input Monitoring, then quit and reopen this app. It will continue from here. If the app isn't in that list, click + under the list and choose it.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 560, alignment: .leading)
           Button("Open Input Monitoring settings…") { wiz.requestPermission() }.buttonStyle(.borderedProminent).controlSize(.large)
         } else {
           Button("Ask again") { wiz.requestPermission() }.controlSize(.large)
