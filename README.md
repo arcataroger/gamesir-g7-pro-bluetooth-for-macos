@@ -18,6 +18,8 @@ If the pad already pairs as an Xbox controller, stop here. Everything below is t
 We keep the app and the write-up for the record: the database mechanism, the numbering rule, and
 the tooling still apply to other pads that macOS ignores.
 
+## (Old version, from before the solution above was discovered)
+
 This app makes the GameSir G7 Pro work as a real game controller on macOS over **Bluetooth**.
 After setup, the pad appears in System Settings › Game Controllers. Games that use Apple's
 GameController framework see it, including GeForce NOW, Apple Arcade, and Safari's Gamepad API.
