@@ -148,16 +148,10 @@ built app carries no quarantine flag, so Gatekeeper does not object to it.
 - **Buttons work in Verify but are wrong in one game.** Check System Settings › Game Controllers for
   a per-app or per-controller remap and reset it; check the game's own controller settings.
 
-## What this does not do
-
-- It does not create a virtual controller or inject input. Apple restricts virtual HID devices to
-  entitled binaries, and AMFI kills ad-hoc attempts.
-- It does not touch the sealed system volume. The database is on the data volume; only the
-  `restricted` flag needs SIP off to bypass.
-- It does not help wired or 2.4 GHz modes. Wired mode uses the Xbox protocol and already works.
-
 ## License
 
-MIT. Apple's personality format and the X3 mapping this derives from belong to Apple; this repo ships a
-derived data file for interoperability. The controller line art and wordmark are extracted from GameSir's own
-product manual and remain GameSir's; they are used here to identify the product and its controls.
+Public domain (CC0 1.0) for everything original here: code, scripts, data files, docs. Use it however
+you like, credit optional. Two things aren't ours to give away and are included only for
+interoperability: the controller drawing and wordmark come from GameSir's manual (with Microsoft's Xbox
+logo in it), and the personality file follows Apple's format and derives from Apple's GameSir X3 entry.
+See LICENSE.
