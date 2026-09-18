@@ -105,7 +105,7 @@ final class Wizard: ObservableObject {
     guard autoAdvance else { return }
     switch step {
     case .welcome: if sipEnabled == false { step = .permission; advanceIfDone() }
-    case .permission: if inputMonitoring { startHID(); step = .detect; advanceIfDone() }
+    case .permission: if inputMonitoring { startHID(); step = .detect; advanceIfDone() }   // never checks; the step requests once
     case .detect:
       if padConnected {
         if entryInstalled && frameworkSeesPad && FileManager.default.fileExists(atPath: MappingFile.url(in: workDir).path) { beginVerify() }
@@ -165,7 +165,6 @@ final class Wizard: ObservableObject {
     currentIndex = i
     if i >= mappable.count { review() }
   }
-  func skip() { advance() }
   func undo() { guard let last = captures.popLast(), let i = mappable.firstIndex(where: { $0.id == last.controlID }) else { return }; currentIndex = i }
   func recapture(_ id: String) { guard step == .capture || step == .review, let i = mappable.firstIndex(where: { $0.id == id }) else { return }; captures.removeAll { $0.controlID == id }; currentIndex = i; step = .capture }
   // axis direction: "up" = low value on Y, "right" = high value on X (HID convention: 0 = up/left)
@@ -363,13 +362,12 @@ struct PermissionView: View {
           Text("In macOS's prompt choose Open System Settings, turn on the switch next to this app, then quit and reopen this app. It will continue from here.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 560, alignment: .leading)
           Button("Quit now") { NSApp.terminate(nil) }.controlSize(.large)
         } else {
-          Button("Allow Input Monitoring…") { wiz.requestPermission() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).controlSize(.large)
-          Text("macOS will ask. Nothing is recorded except which control you press during the wizard.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 560, alignment: .leading)
+          Button("Ask again") { wiz.requestPermission() }.controlSize(.large)
         }
         HeroPad(lit: wiz.inputMonitoring)
       }
     } footer: { Nav(back: { wiz.back(.welcome) }, next: { wiz.startHID(); wiz.step = .detect }, nextEnabled: wiz.inputMonitoring) }
-    .onAppear { if !wiz.permissionRequested { wiz.refreshPermission() } }
+    .onAppear { if !wiz.permissionRequested && !wiz.inputMonitoring { wiz.requestPermission() } }
   }
 }
 
@@ -399,7 +397,6 @@ struct CaptureView: View {
           .frame(maxWidth: 900)
         HStack(spacing: 10) {
           Button("Undo last") { wiz.undo() }.disabled(!wiz.canUndo)
-          Button("Skip this one") { wiz.skip() }
           Button("Start over") { wiz.beginCapture() }
           Spacer()
           Text("Click any control in the picture to capture it again. ⌘Z undoes.").font(.system(size: 15)).foregroundStyle(.secondary)
@@ -518,12 +515,12 @@ struct ControllerView: View {
 
   var body: some View {
     TimelineView(.animation(minimumInterval: 1.0 / 30)) { tl in
-      let phase = (sin(tl.date.timeIntervalSinceReferenceDate * 2 * .pi / 1.4) + 1) / 2   // 0…1, 1.4 s cycle
-      body(pulse: phase)
+      let t = tl.date.timeIntervalSinceReferenceDate
+      body(pulse: (sin(t * 2 * .pi / 1.4) + 1) / 2, ripple: (t / 1.4).truncatingRemainder(dividingBy: 1))
     }
     .aspectRatio(1 / (artAspect + topInset), contentMode: .fit)
   }
-  private func body(pulse: Double) -> some View {
+  private func body(pulse: Double, ripple pulseRipple: Double) -> some View {
     GeometryReader { g in
       let w = g.size.width, artH = w * artAspect, top = w * topInset
       ZStack(alignment: .topLeading) {
@@ -541,9 +538,13 @@ struct ControllerView: View {
           }
           ForEach(bases) { c in
             let sibs = siblings(c), st = stateFor(sibs)
-            let dir = sibs.first { $0.id == target }?.gcDir ?? sibs.first { $0.id == lit }?.gcDir
+            let dir = sibs.first { $0.id == target }?.gcDir
             let d = diameter(c.shape, w), isTarget = sibs.contains { $0.id == target }
             ZStack {
+              if isTarget {
+                shape(c.shape).stroke(Color.accentColor, lineWidth: 3)
+                  .scaleEffect(1 + 0.7 * pulseRipple).opacity(1 - pulseRipple)
+              }
               shape(c.shape).fill(st.fill)
               shape(c.shape).stroke(st.stroke, lineWidth: st.width)
               if st.check { Image(systemName: "checkmark").font(.system(size: max(9, d * 0.32), weight: .bold)).foregroundStyle(st.text) }
@@ -552,8 +553,7 @@ struct ControllerView: View {
               }
             }
             .frame(width: d * widthFactor(c.shape), height: d)
-            .scaleEffect(isTarget ? 1 + 0.08 * pulse : 1)
-            .opacity(isTarget ? 0.7 + 0.3 * pulse : 1)
+            .scaleEffect(isTarget ? 1 + 0.12 * pulse : 1)
             .position(x: c.x * w, y: top + c.y * artH)
             .contentShape(Rectangle())
             .onTapGesture { onClick(sibs.first { $0.isMappable }?.id ?? c.id) }
@@ -576,7 +576,6 @@ struct ControllerView: View {
     let ids = Set(sibs.map { $0.id })
     let bg = scheme == .dark ? Color.black : Color.white
     if let t = target, ids.contains(t) { return S(fill: .accentColor.opacity(0.45), stroke: .accentColor, width: 2.5, text: .white) }
-    if let l = lit, ids.contains(l) { return S(fill: .yellow.opacity(0.55), stroke: .yellow, width: 2, text: .black) }
     if !ids.isDisjoint(with: Set(bad.keys)) { return S(fill: .red.opacity(0.5), stroke: .red, width: 2, text: .white) }
     if !ids.isDisjoint(with: ok) { return S(fill: .green.opacity(0.35), stroke: .green, width: 2, text: .white, check: true) }
     // captured: recede into the background and mark done
