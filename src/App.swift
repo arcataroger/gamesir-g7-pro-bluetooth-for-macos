@@ -7,7 +7,7 @@ struct G7ProSetupApp: App {
   @StateObject private var wiz = Wizard()
   var body: some Scene {
     WindowGroup("GameSir G7 Pro Bluetooth Setup") {
-      WizardView().environmentObject(wiz).frame(minWidth: 900, minHeight: 620)
+      WizardView().environmentObject(wiz).dynamicTypeSize(.xLarge).frame(minWidth: 960, minHeight: 660)
     }
     .windowResizability(.contentSize)
     .commands { CommandGroup(replacing: .undoRedo) { Button("Undo Capture") { wiz.undo() }.keyboardShortcut("z", modifiers: .command).disabled(!wiz.canUndo) } }
