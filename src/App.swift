@@ -317,16 +317,16 @@ struct StepRail: View {
       }
       Spacer()
       HStack(spacing: 12) {
-        Image(systemName: "trash").font(.system(size: 15, weight: .semibold))
+        Image(systemName: "trash").font(.system(size: 15, weight: .semibold)).frame(width: 22, height: 22)   // same slot as the step circles
         Text("Uninstall").font(.system(size: 17, weight: wiz.uninstallMode ? .semibold : .regular))
         Spacer()
       }
       .foregroundStyle(.red)
-      .padding(.horizontal, 24).padding(.vertical, 12)
+      .padding(.horizontal, 24).padding(.vertical, 9)   // same row metrics as the steps
       .background(wiz.uninstallMode ? Color.red.opacity(0.12) : Color.clear)
       .contentShape(Rectangle())
       .onTapGesture { wiz.autoAdvance = false; wiz.uninstallMode = true }
-      .padding(.bottom, 12)
+      .padding(.bottom, 28 + 6)   // the content column's bottom padding, so it sits level with the Back button
     }
     .background(Color.primary.opacity(0.035))
   }
