@@ -254,7 +254,7 @@ struct StepRail: View {
             Circle().fill(current ? Color.accentColor : (done ? Color.green : Color.clear)).frame(width: 22, height: 22)
             Circle().stroke(done || current ? Color.clear : Color.secondary.opacity(0.5), lineWidth: 1.5).frame(width: 22, height: 22)
             if done { Image(systemName: "checkmark").font(.system(size: 11, weight: .bold)).foregroundStyle(.white) }
-            if current { Circle().fill(.white).frame(width: 7, height: 7) }
+            else if current { Circle().fill(.white).frame(width: 7, height: 7) }
           }
           Text(s.title).font(.system(size: 17, weight: current ? .semibold : .regular))
             .foregroundStyle(current ? .primary : (done ? .primary : .secondary))
