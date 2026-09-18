@@ -346,6 +346,7 @@ struct StepRail: View {
         .onTapGesture { wiz.uninstallMode = false; if done || s.rawValue <= wiz.step.rawValue { wiz.back(s) } }
       }
       Spacer()
+      if wiz.entryInstalled || wiz.uninstallMode {
       HStack(spacing: 12) {
         Image(systemName: "trash").font(.system(size: 15, weight: .semibold)).frame(width: 22, height: 22)   // same slot as the step circles
         Text("Uninstall").font(.system(size: 17, weight: wiz.uninstallMode ? .semibold : .regular))
@@ -357,6 +358,7 @@ struct StepRail: View {
       .contentShape(Rectangle())
       .onTapGesture { wiz.autoAdvance = false; wiz.uninstallMode = true }
       .padding(.bottom, 28 + 6)   // the content column's bottom padding, so it sits level with the Back button
+      }
     }
     .background(Color.primary.opacity(0.035))
   }
