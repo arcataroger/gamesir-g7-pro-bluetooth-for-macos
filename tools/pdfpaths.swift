@@ -1,5 +1,26 @@
-// Extract vector paths from a PDF page region into SVG, skipping dashed strokes and text.
-// usage: pdfpaths <pdf> <page> <x> <y> <w> <h> <out.svg>    (crop in PDF points, origin bottom-left)
+// pdfpaths.swift
+//
+// Extracts vector paths from a region of a PDF page into an SVG. We used it to pull the G7 Pro line art
+// out of GameSir's product manual, which is why the app's drawing is the manufacturer's exact geometry.
+//
+// Source manual:
+//   Product page  https://gamesir.com/pages/manuals-gamesir-g7-pro
+//   PDF           https://cdn.shopify.com/s/files/1/2241/8433/files/GameSir-G7_Pro_manual-1.pdf
+//
+// How it works: CoreGraphics' public CGPDFScanner walks the page's content stream. We track the graphics
+// state (CTM, line width, dash pattern, stroke and fill colour) and record every path operator. The manual
+// draws the product in black and the callouts in grey, so we keep only black paint. Dashed strokes and
+// text are dropped. Form XObjects are followed.
+//
+// Usage:  pdfpaths <pdf> <page> <x> <y> <w> <h> <out.svg>     crop in PDF points, origin bottom-left
+//
+// Reproduce the shipped assets (page 1 of the manual above):
+//   front view   pdfpaths manual.pdf 1 48 1969 76.5 54.5 data/controller-front.svg
+//   top view     pdfpaths manual.pdf 1 45 1918 82   50   topview.svg      (source for data/callout-glyphs.json)
+// The callout silhouettes come from the top view: we rasterise each button's region, flood-fill it, trace
+// the outline, and rotate it upright, since that view looks at the pad from behind.
+//
+// Build:  swiftc -O tools/pdfpaths.swift -o pdfpaths
 import Foundation
 import CoreGraphics
 

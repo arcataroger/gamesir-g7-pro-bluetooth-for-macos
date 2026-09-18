@@ -1,7 +1,16 @@
-// main.swift — `g7pro`: headless command line for the same core. Also used by the app as its privileged helper.
-//   g7pro status                       what macOS sees: SIP, pad, firmware, entry installed, framework adoption
-//   g7pro install [--personality P] [--version N] [--backup-dir D]   (run with sudo, SIP off)
-//   g7pro uninstall                    (run with sudo, SIP off)
+// main.swift
+//
+// `g7pro`: the command-line front end over Core.swift and Install.swift. The app bundles it at
+// Contents/MacOS/g7pro and runs it as its privileged helper. Terminal users can run it directly.
+//
+//   g7pro status       Prints SIP state, pad presence and firmware, whether the entry is installed,
+//                      and what Apple's framework reports (name, category, extendedGamepad).
+//   g7pro install      Installs the entry and mapping. Run with sudo and SIP off.
+//                      Options: --personality <plist>  --version <firmware VersionNumber>  --backup-dir <dir>
+//   g7pro uninstall    Removes them. Run with sudo and SIP off.
+//
+// Resources (data/*.json, personality/) resolve relative to the executable: the app bundle's Resources
+// folder, or the repo root when run from build/.
 import Foundation
 import GameController
 

@@ -1,5 +1,16 @@
-// Install.swift — installing/removing the database entry. Runs as root (the app launches the CLI through the
-// admin-password prompt; terminal users run `sudo g7pro install`). Pure Foundation, no shell.
+// Install.swift
+//
+// Adds the G7 Pro to Apple's controller database, or removes it again. Runs as root: the app launches
+// the `g7pro` CLI through the admin-password prompt, and terminal users run `sudo g7pro install`.
+//
+// The database is a MobileAsset bundle under /System/Library/AssetsV2. Its Info.plist lists supported
+// pads; each entry names a personality plist. SIP protects the directory, so callers must turn SIP off
+// for the write. Pure Foundation, no shell.
+//
+// Database.bundles()     Every copy of GameControllers-Custom.bundle on this Mac (normally one).
+// Database.padVersion()  The connected pad's firmware VersionNumber, which the entry must match.
+// Database.install()     Backs up Info.plist, replaces our entry, installs the personality, restarts gamecontrollerd.
+// Database.uninstall()   Reverses install().
 import Foundation
 import IOKit.hid
 

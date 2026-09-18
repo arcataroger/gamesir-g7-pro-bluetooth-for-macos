@@ -1,12 +1,22 @@
-// Core.swift — headless logic shared by any front end (the SwiftUI wizard today, a TUI or CLI tomorrow).
+// Core.swift
 //
-//  * DeviceSpec / ControlSpec       – loaded from data/device.json and data/controls.json
-//  * HIDSource                       – raw HID stream from the pad, plus its full element list
-//  * IndexRule                       – how gamecontrollerd numbers elements (the UsageTypeIndex a personality refers to)
-//  * Capture / MappingFile           – what the user pressed, persisted as mapping.json
-//  * PersonalityWriter               – turns a capture into a personality plist
-//  * FrameworkObserver               – what macOS's GameController framework delivers to apps
-//  * SystemState / Installer         – SIP status, Input Monitoring permission, running install/uninstall as admin
+// The headless core of GameSir G7 Pro Bluetooth Setup. The SwiftUI wizard (App.swift) and the `g7pro`
+// command line (main.swift) both build on this file. It makes every decision; the front ends only display.
+//
+// What lives here:
+//   DeviceSpec, ControlSpec   Codable models for data/device.json and data/controls.json.
+//   HIDSource                 Reads the pad's raw HID reports and lists its input elements. Needs Input Monitoring.
+//   IndexRule                 Computes the `UsageTypeIndex` that gamecontrollerd assigns to each element.
+//                             macOS numbers same-type usages across the whole device, sorted by usage value,
+//                             so the pad's mouse collection interleaves with the gamepad. We verified this rule
+//                             on the G7 Pro; see README "How it works".
+//   Capture, MappingFile      What the user pressed, saved as mapping.json.
+//   PressDetector             Decides when a raw report counts as a press for a control kind.
+//   PersonalityWriter         Turns captures into a personality plist (Apple's controller mapping format).
+//   FrameworkObserver         Reports what Apple's GameController framework delivers to apps, including analog values.
+//   SystemState, Installer    SIP status, Input Monitoring permission, running the CLI as admin.
+//
+// Rule for contributors: put logic here or in the JSON files, never in a view.
 import Foundation
 import IOKit.hid
 import GameController

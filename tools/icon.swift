@@ -1,5 +1,11 @@
-// Renders the app icon: the extracted controller art (data/controller-front.svg), tinted white with heavier
-// line weights, fitted on a squircle with wireless arcs. usage: icon <controller-front.svg> <out.png> [size]
+// icon.swift
+//
+// Renders the app icon. build-app.sh runs it for every size in the iconset, then packs them with iconutil.
+// The art is data/controller-front.svg, the same drawing the wizard shows, extracted from GameSir's manual
+// (see tools/pdfpaths.swift). We tint it white, triple its stroke widths so it survives Dock sizes, fit it
+// inside the macOS icon grid, and add three light-blue arcs for "wireless".
+//
+// Usage:  icon <controller-front.svg> <out.png> [size]      size in pixels, default 1024
 import AppKit
 let a = CommandLine.arguments
 let N = CGFloat(Double(a.count > 3 ? a[3] : "1024")!)

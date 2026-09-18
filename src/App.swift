@@ -1,4 +1,22 @@
-// App.swift — SwiftUI wizard front end over Core.swift. Everything except the two SIP reboots happens here.
+// App.swift
+//
+// The SwiftUI wizard: the only user interface. It walks a first-time user from a paired-but-invisible pad
+// to a working controller in eight steps, and it does nothing the core does not decide.
+//
+//   Wizard          Observable state for the whole flow: step, permissions, captures, verify state.
+//                   `advanceIfDone()` skips steps whose condition already holds. `isSatisfied()` and
+//                   `isDone()` drive the rail; a later satisfied step marks earlier ones done.
+//   StepRail        The left column: steps with done/current/pending states, plus the red Uninstall item.
+//   Page, Nav       Shared page skeleton: headline, one paragraph, content, footer buttons.
+//   *View           One view per step: Welcome, Permission, Detect, Capture, Review, Install, Verify, Done,
+//                   and Uninstall. Satisfied steps show one affirmative line instead of their how-to.
+//   ControllerView  The pad drawing: data/controller-front.svg with hit targets from data/controls.json.
+//   ControlTarget   One target's rendering: pulse, captured state, directional edge highlight, analog travel.
+//   Glyphs          Trigger and bumper silhouettes from data/callout-glyphs.json.
+//
+// Developer flags: `--step <name>` opens a step directly; `--control <id>` picks the capture prompt.
+// The bare Swift compiler in the Command Line Tools cannot expand the @State macro, so the pulse runs on a
+// TimelineView instead of view state. Keep view bodies small: the CI compiler is older than a dev Mac's.
 import SwiftUI
 import AppKit
 
