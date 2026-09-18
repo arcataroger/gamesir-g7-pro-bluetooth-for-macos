@@ -1,0 +1,13 @@
+{
+  "name": "GameSir G7 Pro (Bluetooth mode)",
+  "vendorID": 13623,
+  "productID": 4130,
+  "identifier": "com.GameSir.G7Pro.Bluetooth",
+  "compatibilityVersion": "10.1.36",
+  "personalityTemplate": "personality/GameSir-G7Pro-Bluetooth.plist",
+  "personalityInstallPath": "Personalities/GameSir/G7Pro/Bluetooth.plist",
+  "notes": [
+    "The Xbox button is sent as Consumer Control 0x223 (AC Home); macOS treats it as the system Home button outside the personality.",
+    "The Share button is sent as a keyboard PrintScreen keystroke and cannot be mapped through the personality."
+  ]
+}

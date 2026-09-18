@@ -20,67 +20,67 @@
 					<key>Identifier</key>
 					<string>button.b</string>
 					<key>Predicate</key>
-					<string>UsageType == 1 AND UsageTypeIndex == 1</string>
+					<string>UsageType == 1 AND UsageTypeIndex == 2</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
 					<string>button.g</string>
 					<key>Predicate</key>
-					<string>UsageType == 1 AND UsageTypeIndex == 10</string>
+					<string>UsageType == 1 AND UsageTypeIndex == 15</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
 					<string>button.home</string>
 					<key>Predicate</key>
-					<string>UsageType == 1 AND UsageTypeIndex == 12</string>
+					<string>UsageType == 1 AND UsageTypeIndex == 17</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
 					<string>button.lb</string>
 					<key>Predicate</key>
-					<string>UsageType == 1 AND UsageTypeIndex == 6</string>
+					<string>UsageType == 1 AND UsageTypeIndex == 11</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
 					<string>button.lt</string>
 					<key>Predicate</key>
-					<string>UsageType == 1 AND UsageTypeIndex == 8</string>
+					<string>UsageType == 1 AND UsageTypeIndex == 13</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
 					<string>button.rb</string>
 					<key>Predicate</key>
-					<string>UsageType == 1 AND UsageTypeIndex == 7</string>
+					<string>UsageType == 1 AND UsageTypeIndex == 12</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
 					<string>button.rt</string>
 					<key>Predicate</key>
-					<string>UsageType == 1 AND UsageTypeIndex == 9</string>
+					<string>UsageType == 1 AND UsageTypeIndex == 14</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
 					<string>button.s</string>
 					<key>Predicate</key>
-					<string>UsageType == 1 AND UsageTypeIndex == 11</string>
+					<string>UsageType == 1 AND UsageTypeIndex == 16</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
 					<string>button.square</string>
 					<key>Predicate</key>
-					<string>UsageType == 1 AND UsageTypeIndex == 15</string>
+					<string>UsageType == 1 AND UsageTypeIndex == 20</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
 					<string>button.x</string>
 					<key>Predicate</key>
-					<string>UsageType == 1 AND UsageTypeIndex == 3</string>
+					<string>UsageType == 1 AND UsageTypeIndex == 6</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
 					<string>button.y</string>
 					<key>Predicate</key>
-					<string>UsageType == 1 AND UsageTypeIndex == 4</string>
+					<string>UsageType == 1 AND UsageTypeIndex == 8</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
@@ -92,7 +92,7 @@
 					<key>Identifier</key>
 					<string>thumbstick.left.button</string>
 					<key>Predicate</key>
-					<string>UsageType == 1 AND UsageTypeIndex == 13</string>
+					<string>UsageType == 1 AND UsageTypeIndex == 18</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
@@ -104,25 +104,25 @@
 					<key>Identifier</key>
 					<string>thumbstick.left.y</string>
 					<key>Predicate</key>
-					<string>UsageType == 2 AND UsageTypeIndex == 1</string>
+					<string>UsageType == 2 AND UsageTypeIndex == 2</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
 					<string>thumbstick.right.button</string>
 					<key>Predicate</key>
-					<string>UsageType == 1 AND UsageTypeIndex == 14</string>
+					<string>UsageType == 1 AND UsageTypeIndex == 19</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
 					<string>thumbstick.right.x</string>
 					<key>Predicate</key>
-					<string>UsageType == 2 AND UsageTypeIndex == 2</string>
+					<string>UsageType == 2 AND UsageTypeIndex == 4</string>
 				</dict>
 				<dict>
 					<key>Identifier</key>
 					<string>thumbstick.right.y</string>
 					<key>Predicate</key>
-					<string>UsageType == 2 AND UsageTypeIndex == 3</string>
+					<string>UsageType == 2 AND UsageTypeIndex == 5</string>
 				</dict>
 			</array>
 			<key>Input</key>
