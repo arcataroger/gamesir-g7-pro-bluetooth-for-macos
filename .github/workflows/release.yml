@@ -1,0 +1,33 @@
+name: Build and release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build app
+        run: ./build-app.sh
+      # Notarization hook: when APPLE_ID, APPLE_TEAM_ID, APPLE_APP_PASSWORD and a Developer ID certificate are added
+      # as repository secrets, replace the ad-hoc signature here with a Developer ID signature and run
+      # `xcrun notarytool submit ... --wait` followed by `xcrun stapler staple`.
+      - name: Zip
+        run: |
+          cd build
+          ditto -c -k --keepParent "GameSir G7 Pro Bluetooth Setup.app" "GameSir-G7-Pro-Bluetooth-Setup-${GITHUB_REF_NAME}.zip"
+          shasum -a 256 *.zip > SHA256SUMS.txt
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/*.zip
+            build/SHA256SUMS.txt
+          body: |
+            Unnotarized build (ad-hoc signed). After unzipping, macOS will refuse to open it the first time:
+            open System Settings › Privacy & Security, scroll down, and click **Open Anyway**, then open the app again.
+            Alternatively: `xattr -dr com.apple.quarantine "GameSir G7 Pro Bluetooth Setup.app"` in Terminal.
