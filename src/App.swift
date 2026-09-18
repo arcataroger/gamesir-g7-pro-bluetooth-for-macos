@@ -763,7 +763,6 @@ struct GlyphShape: Shape {
   let glyph: Glyph
   func path(in r: CGRect) -> Path { Path(GlyphPath.cgPath(glyph.paths, in: r)) }
 }
-}
 
 struct ControllerView: View {
   @EnvironmentObject var wiz: Wizard
