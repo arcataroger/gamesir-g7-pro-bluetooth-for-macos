@@ -7,7 +7,7 @@ struct G7ProSetupApp: App {
   @StateObject private var wiz = Wizard()
   var body: some Scene {
     WindowGroup("GameSir G7 Pro Bluetooth Setup") {
-      WizardView().environmentObject(wiz).dynamicTypeSize(.xLarge).frame(minWidth: 960, minHeight: 660)
+      WizardView().environmentObject(wiz).font(.system(size: 18)).frame(minWidth: 1000, minHeight: 700)
     }
     .windowResizability(.contentSize)
     .commands { CommandGroup(replacing: .undoRedo) { Button("Undo Capture") { wiz.undo() }.keyboardShortcut("z", modifiers: .command).disabled(!wiz.canUndo) } }
@@ -206,8 +206,8 @@ struct WizardView: View {
   @EnvironmentObject var wiz: Wizard
   var body: some View {
     VStack(spacing: 0) {
-      StepBar().padding(.horizontal).padding(.top, 10)
-      Divider().padding(.top, 8)
+      StepBar().padding(.horizontal, 32).padding(.top, 18)
+      Divider().padding(.top, 14)
       Group {
         switch wiz.step {
         case .welcome: WelcomeView()
@@ -219,7 +219,7 @@ struct WizardView: View {
         case .verify: VerifyView()
         case .done: DoneView()
         }
-      }.frame(maxWidth: .infinity, maxHeight: .infinity).padding(20)
+      }.frame(maxWidth: .infinity, maxHeight: .infinity).padding(32)
       if let e = wiz.errorText { Text(e).foregroundStyle(.red).padding(.bottom, 8) }
     }
   }
@@ -228,11 +228,19 @@ struct WizardView: View {
 struct StepBar: View {
   @EnvironmentObject var wiz: Wizard
   var body: some View {
-    HStack(spacing: 6) {
+    HStack(spacing: 10) {
       ForEach(Step.allCases, id: \.rawValue) { s in
-        Text(s.title).font(.caption).padding(.horizontal, 8).padding(.vertical, 4)
-          .background(s == wiz.step ? Color.accentColor : (s.rawValue < wiz.step.rawValue ? Color.green.opacity(0.35) : Color.gray.opacity(0.15)))
-          .foregroundStyle(s == wiz.step ? .white : .primary).clipShape(Capsule())
+        let done = s.rawValue < wiz.step.rawValue, current = s == wiz.step
+        HStack(spacing: 8) {
+          if done { Image(systemName: "checkmark").font(.system(size: 14, weight: .bold)) }
+          else { Text("\(s.rawValue + 1)").font(.system(size: 14, weight: .bold)) }
+          Text(s.title).font(.system(size: 16, weight: current ? .semibold : .regular))
+        }
+        .padding(.horizontal, 14).padding(.vertical, 9)
+        .background(current ? Color.accentColor : (done ? Color.green.opacity(0.28) : Color.primary.opacity(0.07)))
+        .foregroundStyle(current ? .white : (done ? .green : .primary))
+        .clipShape(Capsule())
+        .onTapGesture { if done { wiz.back(s) } }
       }
       Spacer()
     }
@@ -242,7 +250,11 @@ struct StepBar: View {
 struct Nav: View {
   var back: (() -> Void)? = nil; var next: (() -> Void)? = nil; var nextTitle = "Continue"; var nextEnabled = true
   var body: some View {
-    HStack { if let b = back { Button("Back", action: b) }; Spacer(); if let n = next { Button(nextTitle, action: n).keyboardShortcut(.defaultAction).disabled(!nextEnabled) } }
+    HStack {
+      if let b = back { Button("Back", action: b).controlSize(.large) }
+      Spacer()
+      if let n = next { Button(nextTitle, action: n).keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).controlSize(.large).disabled(!nextEnabled) }
+    }
   }
 }
 
@@ -250,7 +262,7 @@ struct WelcomeView: View {
   @EnvironmentObject var wiz: Wizard
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
-      Text("Make the \(wiz.device.name) work on macOS").font(.title)
+      Text("Make the \(wiz.device.name) work on macOS").font(.system(size: 36, weight: .bold))
       Text("macOS pairs this pad but no game sees it, because the pad is missing from Apple's controller database. This wizard captures how your pad's buttons are wired, builds the missing database entry, installs it, and verifies the result. Nothing runs in the background afterwards.")
       switch wiz.sipEnabled {
       case .some(false):
@@ -260,7 +272,7 @@ struct WelcomeView: View {
           VStack(alignment: .leading, spacing: 8) {
             Label("SIP is on. The database this wizard edits is write-protected while it is.", systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
             Text("Apple Silicon: shut down, hold the power button until “Loading startup options”, choose Options › Continue, then Utilities › Terminal and run:")
-            Text("csrutil disable").font(.body.monospaced())
+            Text("csrutil disable").font(.system(size: 18, design: .monospaced))
             Text("Restart, then open this app again; it will notice. Intel Macs: restart holding Cmd-R instead. At the end you turn it back on the same way with csrutil enable.").foregroundStyle(.secondary)
           }.frame(maxWidth: .infinity, alignment: .leading).padding(4)
         }
@@ -277,14 +289,14 @@ struct PermissionView: View {
   private let poll = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
-      Text("Allow this app to read the controller").font(.title2)
+      Text("Allow this app to read the controller").font(.system(size: 30, weight: .semibold))
       Text("Reading the pad's raw button stream needs macOS's Input Monitoring permission. Nothing is recorded except which control you press during the wizard.")
       if wiz.inputMonitoring {
         Label("Input Monitoring granted", systemImage: "checkmark.circle").foregroundStyle(.green)
       } else {
-        Button("Allow Input Monitoring…") { wiz.requestPermission() }.keyboardShortcut(.defaultAction)
+        Button("Allow Input Monitoring…") { wiz.requestPermission() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).controlSize(.large)
         Label("Not granted yet", systemImage: "xmark.circle").foregroundStyle(.red)
-        Text("macOS asks the first time. If it doesn't, the Input Monitoring pane opens: turn on the switch next to this app and this page updates by itself.").font(.callout).foregroundStyle(.secondary)
+        Text("macOS asks the first time. If it doesn't, the Input Monitoring pane opens: turn on the switch next to this app and this page updates by itself.").font(.system(size: 16)).foregroundStyle(.secondary)
       }
       Spacer()
       Nav(back: { wiz.back(.welcome) }, next: { wiz.startHID(); wiz.step = .detect }, nextEnabled: wiz.inputMonitoring)
@@ -298,14 +310,14 @@ struct DetectView: View {
   @EnvironmentObject var wiz: Wizard
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
-      Text("Connect the pad over Bluetooth").font(.title2)
+      Text("Connect the pad over Bluetooth").font(.system(size: 30, weight: .semibold))
       if !wiz.padConnected { Text("Set the pad's mode switch to Bluetooth, power it on, and pair it in System Settings › Bluetooth if you haven't. The light should be solid, not blinking.") }
       Label(wiz.padConnected ? "Pad found (firmware version \(wiz.firmware ?? 0))" : "Waiting for the pad…", systemImage: wiz.padConnected ? "gamecontroller.fill" : "gamecontroller").foregroundStyle(wiz.padConnected ? .green : .secondary)
       Label(wiz.frameworkSeesPad ? "macOS already treats it as a game controller (an entry is installed). You can re-capture to fix the mapping, or skip to Verify." : "macOS does not treat it as a game controller yet (expected before install).", systemImage: wiz.frameworkSeesPad ? "checkmark.circle" : "info.circle").foregroundStyle(.secondary)
       Spacer()
-      HStack { Button("Back") { wiz.back(.permission) }; Spacer()
-        if wiz.frameworkSeesPad { Button("Skip to Verify") { wiz.beginVerify() } }
-        Button("Start capture") { wiz.beginCapture() }.keyboardShortcut(.defaultAction).disabled(!wiz.padConnected) }
+      HStack { Button("Back") { wiz.back(.permission) }.controlSize(.large); Spacer()
+        if wiz.frameworkSeesPad { Button("Skip to Verify") { wiz.beginVerify() }.controlSize(.large) }
+        Button("Start capture") { wiz.beginCapture() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).controlSize(.large).disabled(!wiz.padConnected) }
     }
   }
 }
@@ -316,16 +328,16 @@ struct CaptureView: View {
     HStack(alignment: .top, spacing: 20) {
       VStack(alignment: .leading, spacing: 10) {
         if let c = wiz.current {
-          Text("Press \(c.prompt)").font(.title)
+          Text("Press \(c.prompt)").font(.system(size: 36, weight: .bold))
           Text("\(wiz.currentIndex + 1) of \(wiz.mappable.count). Press it once, then release.").foregroundStyle(.secondary)
-        } else { Text("All captured").font(.title) }
-        HStack { Button("Undo last") { wiz.undo() }.disabled(!wiz.canUndo); Button("Skip this one") { wiz.skip() }; Button("Start over") { wiz.beginCapture() } }
-        Text("Click any control in the picture to capture it again. ⌘Z undoes the last capture.").font(.callout).foregroundStyle(.secondary)
+        } else { Text("All captured").font(.system(size: 36, weight: .bold)) }
+        HStack { Button("Undo last") { wiz.undo() }.disabled(!wiz.canUndo); Button("Skip this one") { wiz.skip() }; Button("Start over") { wiz.beginCapture() } }.controlSize(.large)
+        Text("Click any control in the picture to capture it again. ⌘Z undoes the last capture.").font(.system(size: 16)).foregroundStyle(.secondary)
         Divider()
-        Text("Last raw event: \(wiz.lastRawText)").font(.caption.monospaced()).foregroundStyle(.secondary)
+        Text("Last raw event: \(wiz.lastRawText)").font(.system(size: 14, design: .monospaced)).foregroundStyle(.secondary)
         Spacer()
         Nav(back: { wiz.back(.detect) })
-      }.frame(width: 300)
+      }.frame(width: 360)
       ControllerView(target: wiz.current?.id, lit: wiz.litControl, captured: Set(wiz.captures.map { $0.controlID }), ok: [], bad: [:]) { wiz.recapture($0) }
     }
   }
@@ -335,11 +347,11 @@ struct ReviewView: View {
   @EnvironmentObject var wiz: Wizard
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
-      Text("Computed mapping").font(.title2)
-      Text("Each captured control's raw HID usage, and the index macOS will use for it. The rule: macOS numbers same-type usages across the whole device sorted by usage value, so this pad's mouse collection interleaves with the gamepad's buttons and axes.").font(.callout).foregroundStyle(.secondary)
-      List { ForEach(wiz.indexTable, id: \.0) { row in HStack { Text(row.0).frame(width: 220, alignment: .leading); Text(row.1).font(.caption.monospaced()) } } }
-      Text(wiz.changes.isEmpty ? "No differences from the bundled personality." : "\(wiz.changes.count) predicate(s) differ from the bundled personality.").font(.callout)
-      Text("Written to \(wiz.personalityURL.path)").font(.caption).foregroundStyle(.secondary)
+      Text("Computed mapping").font(.system(size: 30, weight: .semibold))
+      Text("Each captured control's raw HID usage, and the index macOS will use for it. The rule: macOS numbers same-type usages across the whole device sorted by usage value, so this pad's mouse collection interleaves with the gamepad's buttons and axes.").font(.system(size: 16)).foregroundStyle(.secondary)
+      List { ForEach(wiz.indexTable, id: \.0) { row in HStack { Text(row.0).frame(width: 220, alignment: .leading); Text(row.1).font(.system(size: 14, design: .monospaced)) } } }
+      Text(wiz.changes.isEmpty ? "No differences from the bundled personality." : "\(wiz.changes.count) predicate(s) differ from the bundled personality.").font(.system(size: 16))
+      Text("Written to \(wiz.personalityURL.path)").font(.system(size: 14)).foregroundStyle(.secondary)
       Nav(back: { wiz.autoAdvance = false; wiz.currentIndex = max(0, wiz.mappable.count - 1); wiz.step = .capture }, next: { wiz.step = .install }, nextTitle: "Install")
     }
   }
@@ -349,7 +361,7 @@ struct InstallView: View {
   @EnvironmentObject var wiz: Wizard
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
-      Text("Install into Apple's controller database").font(.title2)
+      Text("Install into Apple's controller database").font(.system(size: 30, weight: .semibold))
       if wiz.installed {
         Label("Installed. The database entry and mapping are in place.", systemImage: "checkmark.circle").foregroundStyle(.green)
       } else {
@@ -358,8 +370,8 @@ struct InstallView: View {
           Label("SIP is on, so the write would be refused. Disable it from Recovery (the Welcome step explains how) and reopen the app; your capture is saved.", systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
         }
       }
-      Button(wiz.installing ? "Installing…" : (wiz.installed ? "Install again" : "Install")) { wiz.install() }.disabled(wiz.installing || wiz.sipEnabled == true).keyboardShortcut(wiz.installed ? nil : .defaultAction)
-      if !wiz.installOutput.isEmpty { ScrollView { Text(wiz.installOutput).font(.caption.monospaced()).frame(maxWidth: .infinity, alignment: .leading) }.frame(maxHeight: 140).background(Color.gray.opacity(0.08)) }
+      Button(wiz.installing ? "Installing…" : (wiz.installed ? "Install again" : "Install")) { wiz.install() }.disabled(wiz.installing || wiz.sipEnabled == true).keyboardShortcut(wiz.installed ? nil : .defaultAction).buttonStyle(.borderedProminent).controlSize(.large)
+      if !wiz.installOutput.isEmpty { ScrollView { Text(wiz.installOutput).font(.system(size: 14, design: .monospaced)).frame(maxWidth: .infinity, alignment: .leading) }.frame(maxHeight: 140).background(Color.gray.opacity(0.08)) }
       if wiz.installed { Label(wiz.frameworkSeesPad ? "macOS now reports the pad as a game controller." : "Waiting for macOS to pick the pad up…", systemImage: wiz.frameworkSeesPad ? "checkmark.circle" : "clock").foregroundStyle(wiz.frameworkSeesPad ? .green : .secondary) }
       Spacer()
       Nav(back: { wiz.back(.review) }, next: { wiz.beginVerify() }, nextTitle: "Verify", nextEnabled: wiz.installed || wiz.frameworkSeesPad)
@@ -372,17 +384,17 @@ struct VerifyView: View {
   var body: some View {
     HStack(alignment: .top, spacing: 20) {
       VStack(alignment: .leading, spacing: 10) {
-        Text("Verify").font(.title)
+        Text("Verify").font(.system(size: 36, weight: .bold))
         Text("Press every button and move the sticks. Green means macOS delivered the right control to apps; red means it delivered something else.")
-        Text("Verified: \(wiz.verify.ok.count) of \(wiz.mappable.count)").font(.headline)
-        if !wiz.verify.bad.isEmpty { ForEach(wiz.verify.bad.sorted(by: { $0.key < $1.key }), id: \.key) { k, v in Text("\(wiz.controls.first { $0.id == k }?.prompt ?? k): macOS saw \(v)").foregroundStyle(.red).font(.callout) } }
+        Text("Verified: \(wiz.verify.ok.count) of \(wiz.mappable.count)").font(.system(size: 20, weight: .semibold))
+        if !wiz.verify.bad.isEmpty { ForEach(wiz.verify.bad.sorted(by: { $0.key < $1.key }), id: \.key) { k, v in Text("\(wiz.controls.first { $0.id == k }?.prompt ?? k): macOS saw \(v)").foregroundStyle(.red).font(.system(size: 16)) } }
         Divider()
-        Text("Last from macOS: \(wiz.lastFrameworkText)").font(.caption.monospaced()).foregroundStyle(.secondary)
-        Text("Last raw: \(wiz.lastRawText)").font(.caption.monospaced()).foregroundStyle(.secondary)
+        Text("Last from macOS: \(wiz.lastFrameworkText)").font(.system(size: 14, design: .monospaced)).foregroundStyle(.secondary)
+        Text("Last raw: \(wiz.lastRawText)").font(.system(size: 14, design: .monospaced)).foregroundStyle(.secondary)
         if !wiz.frameworkSeesPad { Label("macOS is not reporting the pad as a game controller right now.", systemImage: "exclamationmark.triangle").foregroundStyle(.orange) }
         Spacer()
-        HStack { Button("Back") { wiz.back(.install) }; Button("Re-capture a control") { wiz.step = .capture }; Spacer(); Button("Finish") { wiz.step = .done }.keyboardShortcut(.defaultAction) }
-      }.frame(width: 320)
+        HStack { Button("Back") { wiz.back(.install) }; Button("Re-capture a control") { wiz.step = .capture }; Spacer(); Button("Finish") { wiz.step = .done }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent) }.controlSize(.large)
+      }.frame(width: 380)
       ControllerView(target: nil, lit: wiz.litControl, captured: [], ok: wiz.verify.ok, bad: wiz.verify.bad) { _ in }
     }
   }
@@ -392,7 +404,7 @@ struct DoneView: View {
   @EnvironmentObject var wiz: Wizard
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
-      Text("Done").font(.title)
+      Text("Done").font(.system(size: 36, weight: .bold))
       Text("The pad should now appear in System Settings › General › Game Controllers and work in games that use Apple's GameController framework, including GeForce NOW.")
       if wiz.sipEnabled == true {
         Label("System Integrity Protection is back on.", systemImage: "checkmark.circle").foregroundStyle(.green)
@@ -400,14 +412,14 @@ struct DoneView: View {
         GroupBox("Last step: turn System Integrity Protection back on") {
           VStack(alignment: .leading, spacing: 8) {
             Text("Restart into Recovery the same way as before, open Utilities › Terminal, and run:")
-            Text("csrutil enable").font(.body.monospaced())
+            Text("csrutil enable").font(.system(size: 18, design: .monospaced))
             Text("Then restart. The installed files stay in place.").foregroundStyle(.secondary)
           }.frame(maxWidth: .infinity, alignment: .leading).padding(4)
         }
       }
-      Text("If a macOS update replaces Apple's controller database, or you update the pad's firmware, run this wizard again. Your capture is saved in \(wiz.workDir.path).").font(.callout).foregroundStyle(.secondary)
-      HStack { Button("Uninstall (remove the entry)") { wiz.uninstall() }.disabled(wiz.installing || wiz.sipEnabled == true); Spacer(); Button("Quit") { NSApp.terminate(nil) }.keyboardShortcut(.defaultAction) }
-      if !wiz.installOutput.isEmpty { ScrollView { Text(wiz.installOutput).font(.caption.monospaced()).frame(maxWidth: .infinity, alignment: .leading) }.frame(maxHeight: 120) }
+      Text("If a macOS update replaces Apple's controller database, or you update the pad's firmware, run this wizard again. Your capture is saved in \(wiz.workDir.path).").font(.system(size: 16)).foregroundStyle(.secondary)
+      HStack { Button("Uninstall (remove the entry)") { wiz.uninstall() }.disabled(wiz.installing || wiz.sipEnabled == true); Spacer(); Button("Quit") { NSApp.terminate(nil) }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent) }.controlSize(.large)
+      if !wiz.installOutput.isEmpty { ScrollView { Text(wiz.installOutput).font(.system(size: 14, design: .monospaced)).frame(maxWidth: .infinity, alignment: .leading) }.frame(maxHeight: 120) }
       Spacer()
     }
   }
