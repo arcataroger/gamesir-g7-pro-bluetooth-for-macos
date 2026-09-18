@@ -36,6 +36,8 @@ final class Wizard: ObservableObject {
   @Published var installing = false
   @Published var installed = false
   @Published var verify = VerifyState()
+  @Published var verifyLit: String? = nil        // control macOS just delivered, during Verify
+  @Published var verifySeen = false
   @Published var lastFrameworkText = ""
   @Published var errorText: String? = nil
   @Published var autoAdvance = true          // cleared when the user navigates backwards by hand
@@ -96,7 +98,7 @@ final class Wizard: ObservableObject {
     case .capture: return !mappable.isEmpty && mappable.allSatisfy { m in captures.contains { $0.controlID == m.id } }
     case .review: return !captures.isEmpty && FileManager.default.fileExists(atPath: personalityURL.path)
     case .install: return installed || (entryInstalled && frameworkSeesPad)
-    case .verify: return !mappable.isEmpty && verify.ok.count == mappable.count
+    case .verify: return verifySeen
     case .done: return false
     }
   }
@@ -212,12 +214,12 @@ final class Wizard: ObservableObject {
   func beginVerify() { verify = VerifyState(); step = .verify }
   private func frameworkEvent(_ name: String, _ dir: String?) {
     lastFrameworkText = dir.map { "\(name) \($0)" } ?? name
-    guard step == .verify, let pressed = lastRawControlID, Date().timeIntervalSince(lastRawAt) < 1.0,
-          let c = controls.first(where: { $0.id == pressed }) else { return }
-    let expected = c.gcDir.map { "\(c.gc) \($0)" } ?? c.gc
-    let seen = dir.map { "\(name) \($0)" } ?? name
-    if seen == expected { verify.ok.insert(c.id); verify.bad.removeValue(forKey: c.id) }
-    else { verify.bad[c.id] = seen }
+    guard step == .verify else { return }
+    verifySeen = true
+    // which control did macOS deliver? match the framework element name (and direction for pads/sticks)
+    let hit = controls.first { c in c.gc == name && (c.gcDir == nil || c.gcDir == dir) } ?? controls.first { $0.gc == name }
+    verifyLit = hit?.id
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in if self?.verifyLit == hit?.id { self?.verifyLit = nil } }
   }
 }
 
@@ -296,7 +298,7 @@ struct Page<Content: View, Footer: View>: View {
 }
 
 struct Nav: View {
-  var back: (() -> Void)? = nil; var next: (() -> Void)? = nil; var nextTitle = "Continue"; var nextEnabled = true
+  var back: (() -> Void)? = nil; var next: (() -> Void)? = nil; var nextTitle = "Next"; var nextEnabled = true
   var body: some View {
     HStack {
       if let b = back { Button("Back", action: b).controlSize(.large) }
@@ -383,7 +385,7 @@ struct DetectView: View {
     } footer: {
       HStack { Button("Back") { wiz.back(.permission) }.controlSize(.large); Spacer()
         if wiz.frameworkSeesPad { Button("Skip to Verify") { wiz.beginVerify() }.controlSize(.large) }
-        Button("Start capture") { wiz.beginCapture() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).controlSize(.large).disabled(!wiz.padConnected) }
+        Button("Next") { wiz.beginCapture() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).controlSize(.large).disabled(!wiz.padConnected) }
     }
   }
 }
@@ -393,7 +395,7 @@ struct CaptureView: View {
   var body: some View {
     Page(wiz.current.map { "Press \($0.prompt)" } ?? "All captured", wiz.current != nil ? "\(wiz.currentIndex + 1) of \(wiz.mappable.count). Press once, then let go." : nil) {
       VStack(alignment: .leading, spacing: 16) {
-        ControllerView(target: wiz.current?.id, lit: wiz.litControl, captured: Set(wiz.captures.map { $0.controlID }), ok: [], bad: [:], showTargets: true) { wiz.recapture($0) }
+        ControllerView(target: wiz.current?.id, lit: nil, captured: Set(wiz.captures.map { $0.controlID }), ok: [], bad: [:], showTargets: true) { wiz.recapture($0) }
           .frame(maxWidth: 900)
         HStack(spacing: 10) {
           Button("Undo last") { wiz.undo() }.disabled(!wiz.canUndo)
@@ -423,7 +425,7 @@ struct ReviewView: View {
         }.frame(maxWidth: 760).clipShape(RoundedRectangle(cornerRadius: 10))
         Text(wiz.changes.isEmpty ? "Matches the bundled mapping." : "\(wiz.changes.count) control(s) differ from the bundled mapping; yours wins.").font(.system(size: 16)).foregroundStyle(.secondary)
       }
-    } footer: { Nav(back: { wiz.autoAdvance = false; wiz.currentIndex = max(0, wiz.mappable.count - 1); wiz.step = .capture }, next: { wiz.step = .install }, nextTitle: "Install") }
+    } footer: { Nav(back: { wiz.autoAdvance = false; wiz.currentIndex = max(0, wiz.mappable.count - 1); wiz.step = .capture }, next: { wiz.step = .install }) }
   }
 }
 
@@ -442,28 +444,25 @@ struct InstallView: View {
         if !wiz.installOutput.isEmpty { ScrollView { Text(wiz.installOutput).font(.system(size: 13, design: .monospaced)).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading).padding(10) }.frame(maxWidth: 760, maxHeight: 130).background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 10)) }
         HeroPad(lit: wiz.installed && wiz.frameworkSeesPad)
       }
-    } footer: { Nav(back: { wiz.back(.review) }, next: { wiz.beginVerify() }, nextTitle: "Verify", nextEnabled: wiz.installed || wiz.frameworkSeesPad) }
+    } footer: { Nav(back: { wiz.back(.review) }, next: { wiz.beginVerify() }, nextEnabled: wiz.installed || wiz.frameworkSeesPad) }
   }
 }
 
 struct VerifyView: View {
   @EnvironmentObject var wiz: Wizard
   var body: some View {
-    Page("Try every control", "Green means macOS delivered the right control to apps. Red means it delivered something else.") {
+    Page("Try it out", "Press anything on the pad. The control macOS delivers to apps lights up, so you can check every button reads the way it should.") {
       VStack(alignment: .leading, spacing: 16) {
-        ControllerView(target: nil, lit: wiz.litControl, captured: [], ok: wiz.verify.ok, bad: wiz.verify.bad, showTargets: true) { _ in }
+        ControllerView(target: nil, lit: wiz.verifyLit, captured: [], ok: [], bad: [:], showTargets: true) { _ in }
           .frame(maxWidth: 900)
-        HStack(alignment: .firstTextBaseline, spacing: 18) {
-          Text("\(wiz.verify.ok.count) of \(wiz.mappable.count) verified").font(.system(size: 20, weight: .semibold))
+        HStack(spacing: 18) {
+          Text(wiz.lastFrameworkText.isEmpty ? "Waiting for a press…" : "macOS saw: \(wiz.lastFrameworkText)").font(.system(size: 20, weight: .semibold))
           if !wiz.frameworkSeesPad { Status(.warn, "macOS isn't reporting the pad as a game controller right now.") }
         }
-        ForEach(wiz.verify.bad.sorted(by: { $0.key < $1.key }), id: \.key) { k, v in
-          Text("\(wiz.controls.first { $0.id == k }?.prompt ?? k): macOS saw \(v)").foregroundStyle(.red).font(.system(size: 16))
-        }
-        Text(wiz.lastFrameworkText.isEmpty ? " " : "macOS delivered: \(wiz.lastFrameworkText)").font(.system(size: 14, design: .monospaced)).foregroundStyle(.tertiary)
+        Text("If something lights up in the wrong place, go back to Capture and press that control again.").font(.system(size: 16)).foregroundStyle(.secondary)
       }
     } footer: {
-      HStack { Button("Back") { wiz.back(.install) }; Button("Capture a control again") { wiz.step = .capture }; Spacer(); Button("Finish") { wiz.step = .done }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent) }.controlSize(.large)
+      HStack { Button("Back") { wiz.back(.install) }; Button("Capture again") { wiz.autoAdvance = false; wiz.step = .capture }; Spacer(); Button("Next") { wiz.step = .done }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent) }.controlSize(.large)
     }
   }
 }
@@ -570,7 +569,7 @@ struct ControllerView: View {
           }
           ForEach(bases) { c in
             let sibs = siblings(c), st = stateFor(sibs)
-            let dir = sibs.first { $0.id == target }?.gcDir
+            let dir = sibs.first { $0.id == target }?.gcDir ?? sibs.first { $0.id == lit }?.gcDir
             let d = diameter(c.shape, w), isTarget = sibs.contains { $0.id == target }
             let glyph = c.shape == "callout" ? Glyphs.all[c.id] : nil
             let shp: AnyShape = glyph.map { AnyShape(GlyphShape(glyph: $0)) } ?? shape(c.shape)
@@ -617,6 +616,7 @@ struct ControllerView: View {
     let ids = Set(sibs.map { $0.id })
     let bg = scheme == .dark ? Color.black : Color.white
     if let t = target, ids.contains(t) { return S(fill: .accentColor.opacity(0.45), stroke: .accentColor, width: 2.5, text: .white) }
+    if let l = lit, ids.contains(l) { return S(fill: .accentColor.opacity(0.45), stroke: .accentColor, width: 2.5, text: .white) }
     if !ids.isDisjoint(with: Set(bad.keys)) { return S(fill: .red.opacity(0.5), stroke: .red, width: 2, text: .white) }
     if !ids.isDisjoint(with: ok) { return S(fill: .green.opacity(0.35), stroke: .green, width: 2, text: .white, check: true) }
     // captured: recede into the background and mark done
