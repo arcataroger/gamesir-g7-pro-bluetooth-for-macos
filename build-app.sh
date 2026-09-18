@@ -15,8 +15,8 @@ echo "==> Icon"
 ICONTOOL="$HERE/build/icon-render"; swiftc -O "$HERE/tools/icon.swift" -o "$ICONTOOL" 2>&1 | grep -v warning || true
 ICONSET="$HERE/build/AppIcon.iconset"; rm -rf "$ICONSET"; mkdir -p "$ICONSET"
 for sz in 16 32 128 256 512; do
-  "$ICONTOOL" "$ICONSET/icon_${sz}x${sz}.png" $sz >/dev/null
-  "$ICONTOOL" "$ICONSET/icon_${sz}x${sz}@2x.png" $((sz*2)) >/dev/null
+  "$ICONTOOL" "$HERE/data/controller-front.svg" "$ICONSET/icon_${sz}x${sz}.png" $sz >/dev/null
+  "$ICONTOOL" "$HERE/data/controller-front.svg" "$ICONSET/icon_${sz}x${sz}@2x.png" $((sz*2)) >/dev/null
 done
 iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
 echo "==> Bundling resources"

@@ -490,6 +490,38 @@ struct DoneView: View {
 
 // MARK: - Controller drawing: the manual's line art (data/controller-front.svg) with hit targets from controls.json
 
+/// Silhouettes for the shoulder/trigger callouts, extracted from the manual's top view (data/callout-glyphs.json).
+struct Glyph: Decodable { var aspect: Double; var paths: [String]; var solid: Bool? }
+enum Glyphs {
+  static let all: [String: Glyph] = {
+    guard let u = Bundle.main.resourceURL?.appendingPathComponent("data/callout-glyphs.json"),
+          let d = try? Data(contentsOf: u), let g = try? JSONDecoder().decode([String: Glyph].self, from: d) else { return [:] }
+    return g
+  }()
+}
+/// A SwiftUI Shape from normalized "M x y L x y C … Z" path data (0…1 in both axes, scaled to the rect).
+struct GlyphShape: Shape {
+  let glyph: Glyph
+  func path(in r: CGRect) -> Path {
+    var out = Path()
+    func pt(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: r.minX + CGFloat(x) * r.width, y: r.minY + CGFloat(y) * r.height) }
+    for d in glyph.paths {
+      let t = d.split(separator: " ").map(String.init); var i = 0
+      func n() -> Double { let v = Double(t[i])!; i += 1; return v }
+      while i < t.count {
+        switch t[i] {
+        case "M": i += 1; let x = n(), y = n(); out.move(to: pt(x, y))
+        case "L": i += 1; let x = n(), y = n(); out.addLine(to: pt(x, y))
+        case "C": i += 1; let x1 = n(), y1 = n(), x2 = n(), y2 = n(), x = n(), y = n(); out.addCurve(to: pt(x, y), control1: pt(x1, y1), control2: pt(x2, y2))
+        case "Z": i += 1; out.closeSubpath()
+        default: i += 1
+        }
+      }
+    }
+    return out
+  }
+}
+
 struct ControllerView: View {
   @EnvironmentObject var wiz: Wizard
   let target: String?; let lit: String?; let captured: Set<String>; let ok: Set<String>; let bad: [String: String]
@@ -504,7 +536,7 @@ struct ControllerView: View {
   }()
   private var artAspect: CGFloat { (Self.art?.size.height ?? 54.5) / (Self.art?.size.width ?? 76.5) }
   /// Room above the art for the shoulder/trigger callouts.
-  private let topInset: CGFloat = 0.11
+  private let topInset: CGFloat = 0.17
 
   private var bases: [ControlSpec] {
     var seen = Set<String>(); var out: [ControlSpec] = []
@@ -540,19 +572,28 @@ struct ControllerView: View {
             let sibs = siblings(c), st = stateFor(sibs)
             let dir = sibs.first { $0.id == target }?.gcDir
             let d = diameter(c.shape, w), isTarget = sibs.contains { $0.id == target }
+            let glyph = c.shape == "callout" ? Glyphs.all[c.id] : nil
+            let shp: AnyShape = glyph.map { AnyShape(GlyphShape(glyph: $0)) } ?? shape(c.shape)
+            let fw = glyph.map { _ in c.id.hasSuffix("t") ? w * 0.07 : w * 0.11 } ?? d * widthFactor(c.shape)
+            let fh = glyph.map { fw * CGFloat($0.aspect) } ?? d
             ZStack {
-              if isTarget {
-                shape(c.shape).stroke(Color.accentColor, lineWidth: 3)
-                  .scaleEffect(1 + 0.7 * pulseRipple).opacity(1 - pulseRipple)
+              if let g = glyph, g.solid != true {
+                // line-art silhouettes: a capsule carries the state; the outline is a stroke on top
+                if isTarget { Capsule().stroke(Color.accentColor, lineWidth: 3).scaleEffect(1 + 0.5 * pulseRipple).opacity(1 - pulseRipple) }
+                Capsule().fill(st.fill).padding(-w * 0.008)
+                shp.stroke(isTarget ? Color.white : st.stroke, lineWidth: isTarget ? 2 : 1.4)
+              } else {
+                if isTarget { shp.stroke(Color.accentColor, lineWidth: 3).scaleEffect(1 + 0.7 * pulseRipple).opacity(1 - pulseRipple) }
+                shp.fill(st.fill)
+                shp.stroke(st.stroke, lineWidth: st.width)
               }
-              shape(c.shape).fill(st.fill)
-              shape(c.shape).stroke(st.stroke, lineWidth: st.width)
-              if st.check { Image(systemName: "checkmark").font(.system(size: max(9, d * 0.32), weight: .bold)).foregroundStyle(st.text) }
-              else if let text = dir.map({ arrow($0) }) ?? (c.label.isEmpty ? nil : c.label) {
+              if st.check { Image(systemName: "checkmark").font(.system(size: max(9, min(fw, fh) * 0.45), weight: .bold)).foregroundStyle(st.text) }
+              else if glyph == nil, let text = dir.map({ arrow($0) }) ?? (c.label.isEmpty ? nil : c.label) {
                 Text(text).font(.system(size: max(9, d * (c.shape == "stick" || c.shape == "dpad" ? 0.26 : 0.42)), weight: .bold)).foregroundStyle(st.text)
               }
             }
-            .frame(width: d * widthFactor(c.shape), height: d)
+            .overlay(alignment: .top) { if glyph != nil { Text(c.label).font(.system(size: max(10, w * 0.019), weight: .bold)).foregroundStyle(.secondary).offset(y: -w * 0.03) } }
+            .frame(width: fw, height: fh)
             .scaleEffect(isTarget ? 1 + 0.12 * pulse : 1)
             .position(x: c.x * w, y: top + c.y * artH)
             .contentShape(Rectangle())
