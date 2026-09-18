@@ -40,6 +40,7 @@ final class Wizard: ObservableObject {
   @Published var errorText: String? = nil
   @Published var autoAdvance = true          // cleared when the user navigates backwards by hand
   @Published var entryInstalled = false      // the database already has an entry for this pad
+  @Published var permissionRequested = false // after asking once, nothing changes until the app is relaunched
 
   let device: DeviceSpec
   let controls: [ControlSpec]
@@ -116,9 +117,11 @@ final class Wizard: ObservableObject {
 
   // MARK: permission + HID
   func requestPermission() {
-    // Just ask. macOS shows its own prompt with an "Open System Settings" button; the 1 s poll picks up the result.
+    // Ask once. macOS shows its own prompt with an "Open System Settings" button. The grant only takes effect
+    // for a fresh process, so there is nothing to poll for afterwards.
+    permissionRequested = true
     inputMonitoring = HIDSource.requestInputMonitoring()
-    refreshPermission()
+    if inputMonitoring { startHID(); advanceIfDone() }
   }
   private var lastPermissionCheck = Date.distantPast
   /// One TCC round-trip at most every 2 s: on this macOS a status check can itself surface the prompt.
@@ -355,15 +358,18 @@ struct PermissionView: View {
     Page("Let this app read the pad", wiz.inputMonitoring ? nil : "macOS calls this permission Input Monitoring. The wizard only listens for which control you press while it's open.") {
       VStack(alignment: .leading, spacing: 18) {
         if wiz.inputMonitoring { Status(.ok, "Input Monitoring is allowed. You can continue.") }
-        else {
+        else if wiz.permissionRequested {
+          Status(.wait, "Waiting for you to turn it on.")
+          Text("In macOS's prompt choose Open System Settings, turn on the switch next to this app, then quit and reopen this app. It will continue from here.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 560, alignment: .leading)
+          Button("Quit now") { NSApp.terminate(nil) }.controlSize(.large)
+        } else {
           Button("Allow Input Monitoring…") { wiz.requestPermission() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).controlSize(.large)
-          Text("macOS will ask. Choose Open System Settings in its prompt, turn on the switch next to this app, and come back to this window.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 560, alignment: .leading)
+          Text("macOS will ask. Nothing is recorded except which control you press during the wizard.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 560, alignment: .leading)
         }
         HeroPad(lit: wiz.inputMonitoring)
       }
     } footer: { Nav(back: { wiz.back(.welcome) }, next: { wiz.startHID(); wiz.step = .detect }, nextEnabled: wiz.inputMonitoring) }
-    .onAppear { wiz.refreshPermission() }
-    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in if !wiz.inputMonitoring { wiz.refreshPermission() } }
+    .onAppear { if !wiz.permissionRequested { wiz.refreshPermission() } }
   }
 }
 
@@ -499,9 +505,10 @@ struct ControllerView: View {
     for u in candidates { if let i = NSImage(contentsOf: u) { i.isTemplate = true; return i } }
     return nil
   }()
-  private var aspect: CGFloat { (Self.art?.size.height ?? 52.5) / (Self.art?.size.width ?? 76.5) }
+  private var artAspect: CGFloat { (Self.art?.size.height ?? 54.5) / (Self.art?.size.width ?? 76.5) }
+  /// Room above the art for the shoulder/trigger callouts.
+  private let topInset: CGFloat = 0.11
 
-  /// One hit target per physical position; directional controls share their stick/pad.
   private var bases: [ControlSpec] {
     var seen = Set<String>(); var out: [ControlSpec] = []
     for c in wiz.controls { let key = "\(c.x),\(c.y)"; if !seen.contains(key) { seen.insert(key); out.append(c) } }
@@ -510,54 +517,71 @@ struct ControllerView: View {
   private func siblings(_ c: ControlSpec) -> [ControlSpec] { wiz.controls.filter { $0.x == c.x && $0.y == c.y } }
 
   var body: some View {
+    TimelineView(.animation(minimumInterval: 1.0 / 30)) { tl in
+      let phase = (sin(tl.date.timeIntervalSinceReferenceDate * 2 * .pi / 1.4) + 1) / 2   // 0…1, 1.4 s cycle
+      body(pulse: phase)
+    }
+    .aspectRatio(1 / (artAspect + topInset), contentMode: .fit)
+  }
+  private func body(pulse: Double) -> some View {
     GeometryReader { g in
-      let w = g.size.width, h = w * aspect
+      let w = g.size.width, artH = w * artAspect, top = w * topInset
       ZStack(alignment: .topLeading) {
         if let art = Self.art {
           Image(nsImage: art).resizable().interpolation(.high)
             .foregroundStyle(scheme == .dark ? Color.white.opacity(0.85) : Color.black.opacity(0.85))
-            .frame(width: w, height: h)
-        } else {
-          RoundedRectangle(cornerRadius: 24).fill(Color.gray.opacity(0.15)).frame(width: w, height: h)
+            .frame(width: w, height: artH).offset(y: top)
         }
-        ForEach(showTargets ? bases : []) { c in
-          let sibs = siblings(c)
-          let st = stateFor(sibs)
-          let dir = sibs.first { $0.id == target }?.gcDir ?? sibs.first { $0.id == lit }?.gcDir
-          let d = diameter(c.shape, w)
-          ZStack {
-            shape(c.shape).fill(st.fill)
-            shape(c.shape).stroke(st.stroke, lineWidth: st.width)
-            if let text = dir.map({ arrow($0) }) ?? (c.label.isEmpty ? nil : c.label) {
-              Text(text).font(.system(size: max(9, d * (c.shape == "stick" || c.shape == "dpad" ? 0.26 : 0.42)), weight: .bold)).foregroundStyle(st.text)
-            }
+        if showTargets {
+          // callout leaders first, so targets draw over them
+          ForEach(bases.filter { $0.ax != nil }) { c in
+            Path { p in p.move(to: CGPoint(x: c.x * w, y: top + c.y * artH)); p.addLine(to: CGPoint(x: (c.ax ?? c.x) * w, y: top + (c.ay ?? c.y) * artH)) }
+              .stroke(stateFor(siblings(c)).stroke, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+            Circle().fill(stateFor(siblings(c)).stroke).frame(width: 7, height: 7).position(x: (c.ax ?? c.x) * w, y: top + (c.ay ?? c.y) * artH)
           }
-          .frame(width: d * (c.shape == "wide" ? 2.2 : c.shape == "pill" ? 1.6 : c.shape == "bumper" ? 5.2 : c.shape == "trigger" ? 2.6 : 1), height: d)
-          .position(x: c.x * w, y: c.y * h)
-          .contentShape(Rectangle())
-          .onTapGesture { onClick(sibs.first { $0.isMappable }?.id ?? c.id) }
-          .help(sibs.map { $0.prompt }.joined(separator: " / "))
+          ForEach(bases) { c in
+            let sibs = siblings(c), st = stateFor(sibs)
+            let dir = sibs.first { $0.id == target }?.gcDir ?? sibs.first { $0.id == lit }?.gcDir
+            let d = diameter(c.shape, w), isTarget = sibs.contains { $0.id == target }
+            ZStack {
+              shape(c.shape).fill(st.fill)
+              shape(c.shape).stroke(st.stroke, lineWidth: st.width)
+              if st.check { Image(systemName: "checkmark").font(.system(size: max(9, d * 0.32), weight: .bold)).foregroundStyle(st.text) }
+              else if let text = dir.map({ arrow($0) }) ?? (c.label.isEmpty ? nil : c.label) {
+                Text(text).font(.system(size: max(9, d * (c.shape == "stick" || c.shape == "dpad" ? 0.26 : 0.42)), weight: .bold)).foregroundStyle(st.text)
+              }
+            }
+            .frame(width: d * widthFactor(c.shape), height: d)
+            .scaleEffect(isTarget ? 1 + 0.08 * pulse : 1)
+            .opacity(isTarget ? 0.55 + 0.45 * pulse : 1)
+            .position(x: c.x * w, y: top + c.y * artH)
+            .contentShape(Rectangle())
+            .onTapGesture { onClick(sibs.first { $0.isMappable }?.id ?? c.id) }
+            .help(sibs.map { $0.prompt }.joined(separator: " / "))
+          }
         }
-      }.frame(width: w, height: h)
+      }.frame(width: w, height: artH + top)
     }
-    .aspectRatio(1 / aspect, contentMode: .fit)
   }
   private func arrow(_ d: String) -> String { ["up": "↑", "down": "↓", "left": "←", "right": "→"][d] ?? d }
   private func diameter(_ shape: String, _ w: CGFloat) -> CGFloat {
-    switch shape { case "stick": return w * 0.135; case "dpad": return w * 0.14; case "small", "circle-sm": return w * 0.05; case "pill": return w * 0.04; case "wide": return w * 0.045; case "bumper": return w * 0.038; case "trigger": return w * 0.032; default: return w * 0.065 }
+    switch shape { case "stick": return w * 0.118; case "dpad": return w * 0.156; case "small", "circle-sm": return w * 0.046; case "pill": return w * 0.04; case "callout": return w * 0.04; default: return w * 0.062 }
   }
+  private func widthFactor(_ shape: String) -> CGFloat { shape == "pill" ? 1.6 : shape == "callout" ? 1.9 : 1 }
   private func shape(_ s: String) -> AnyShape {
-    switch s { case "small", "wide": return AnyShape(RoundedRectangle(cornerRadius: 8)); case "pill", "bumper", "trigger": return AnyShape(Capsule()); default: return AnyShape(Circle()) }
+    switch s { case "pill", "callout": return AnyShape(Capsule()); default: return AnyShape(Circle()) }
   }
-  private struct S { var fill: Color; var stroke: Color; var width: CGFloat; var text: Color }
+  private struct S { var fill: Color; var stroke: Color; var width: CGFloat; var text: Color; var check = false }
   private func stateFor(_ sibs: [ControlSpec]) -> S {
     let ids = Set(sibs.map { $0.id })
-    if let t = target, ids.contains(t) { return S(fill: .accentColor.opacity(0.45), stroke: .accentColor, width: 3, text: .white) }
-    if let l = lit, ids.contains(l) { return S(fill: .yellow.opacity(0.45), stroke: .orange, width: 3, text: .primary) }
-    if !ids.isDisjoint(with: Set(bad.keys)) { return S(fill: .red.opacity(0.4), stroke: .red, width: 2, text: .white) }
-    if !ids.isDisjoint(with: ok) { return S(fill: .green.opacity(0.4), stroke: .green, width: 2, text: .white) }
-    if !ids.isDisjoint(with: captured) { return S(fill: .green.opacity(0.18), stroke: .green.opacity(0.7), width: 1.5, text: .primary) }
-    if sibs.allSatisfy({ !$0.isMappable }) { return S(fill: .clear, stroke: .gray.opacity(0.35), width: 1, text: .secondary) }
-    return S(fill: .clear, stroke: .gray.opacity(0.6), width: 1, text: .primary)
+    let bg = scheme == .dark ? Color.black : Color.white
+    if let t = target, ids.contains(t) { return S(fill: .accentColor, stroke: .white, width: 2, text: .white) }
+    if let l = lit, ids.contains(l) { return S(fill: .yellow.opacity(0.55), stroke: .yellow, width: 2, text: .black) }
+    if !ids.isDisjoint(with: Set(bad.keys)) { return S(fill: .red.opacity(0.5), stroke: .red, width: 2, text: .white) }
+    if !ids.isDisjoint(with: ok) { return S(fill: .green.opacity(0.35), stroke: .green, width: 2, text: .white, check: true) }
+    // captured: recede into the background and mark done
+    if !ids.isDisjoint(with: captured) { return S(fill: bg.opacity(0.72), stroke: .secondary.opacity(0.35), width: 1, text: .secondary.opacity(0.7), check: true) }
+    if sibs.allSatisfy({ !$0.isMappable }) { return S(fill: .clear, stroke: .clear, width: 0, text: .secondary) }
+    return S(fill: .clear, stroke: .secondary.opacity(0.5), width: 1, text: .primary)
   }
 }

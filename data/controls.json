@@ -16,8 +16,8 @@
   "ident": "button.b",
   "kind": "button",
   "gc": "B Button",
-  "x": 0.807,
-  "y": 0.2909,
+  "x": 0.8064,
+  "y": 0.291,
   "shape": "circle",
   "label": ""
  },
@@ -27,8 +27,8 @@
   "ident": "button.x",
   "kind": "button",
   "gc": "X Button",
-  "x": 0.677,
-  "y": 0.2909,
+  "x": 0.6763,
+  "y": 0.291,
   "shape": "circle",
   "label": ""
  },
@@ -38,8 +38,8 @@
   "ident": "button.y",
   "kind": "button",
   "gc": "Y Button",
-  "x": 0.742,
-  "y": 0.2023,
+  "x": 0.7414,
+  "y": 0.1996,
   "shape": "circle",
   "label": ""
  },
@@ -49,10 +49,12 @@
   "ident": "button.lb",
   "kind": "button",
   "gc": "L1 Button",
-  "x": 0.275,
-  "y": 0.0597,
-  "shape": "bumper",
-  "label": "LB"
+  "x": 0.31,
+  "y": -0.075,
+  "shape": "callout",
+  "label": "LB",
+  "ax": 0.265,
+  "ay": 0.092
  },
  {
   "id": "rb",
@@ -60,10 +62,12 @@
   "ident": "button.rb",
   "kind": "button",
   "gc": "R1 Button",
-  "x": 0.725,
-  "y": 0.0597,
-  "shape": "bumper",
-  "label": "RB"
+  "x": 0.69,
+  "y": -0.075,
+  "shape": "callout",
+  "label": "RB",
+  "ax": 0.735,
+  "ay": 0.092
  },
  {
   "id": "lt",
@@ -71,10 +75,12 @@
   "ident": "button.lt",
   "kind": "button",
   "gc": "L2 Button",
-  "x": 0.195,
-  "y": 0.0212,
-  "shape": "trigger",
-  "label": "LT"
+  "x": 0.13,
+  "y": -0.075,
+  "shape": "callout",
+  "label": "LT",
+  "ax": 0.177,
+  "ay": 0.074
  },
  {
   "id": "rt",
@@ -82,10 +88,12 @@
   "ident": "button.rt",
   "kind": "button",
   "gc": "R2 Button",
-  "x": 0.805,
-  "y": 0.0212,
-  "shape": "trigger",
-  "label": "RT"
+  "x": 0.87,
+  "y": -0.075,
+  "shape": "callout",
+  "label": "RT",
+  "ax": 0.812,
+  "ay": 0.074
  },
  {
   "id": "l3",
@@ -93,8 +101,8 @@
   "ident": "thumbstick.left.button",
   "kind": "button",
   "gc": "Left Thumbstick Button",
-  "x": 0.247,
-  "y": 0.2938,
+  "x": 0.2478,
+  "y": 0.291,
   "shape": "stick",
   "label": "L3"
  },
@@ -104,8 +112,8 @@
   "ident": "thumbstick.right.button",
   "kind": "button",
   "gc": "Right Thumbstick Button",
-  "x": 0.618,
-  "y": 0.5,
+  "x": 0.6209,
+  "y": 0.5006,
   "shape": "stick",
   "label": "R3"
  },
@@ -115,8 +123,8 @@
   "ident": "button.g",
   "kind": "button",
   "gc": "Options Button",
-  "x": 0.378,
-  "y": 0.1715,
+  "x": 0.3794,
+  "y": 0.1747,
   "shape": "circle-sm",
   "label": ""
  },
@@ -126,8 +134,8 @@
   "ident": "button.s",
   "kind": "button",
   "gc": "Menu Button",
-  "x": 0.594,
-  "y": 0.1715,
+  "x": 0.6097,
+  "y": 0.1747,
   "shape": "circle-sm",
   "label": ""
  },
@@ -138,8 +146,8 @@
   "kind": "hat",
   "gc": "Direction Pad",
   "gcDir": "up",
-  "x": 0.366,
-  "y": 0.5077,
+  "x": 0.365,
+  "y": 0.5094,
   "shape": "dpad",
   "label": ""
  },
@@ -150,8 +158,8 @@
   "kind": "hat",
   "gc": "Direction Pad",
   "gcDir": "right",
-  "x": 0.366,
-  "y": 0.5077,
+  "x": 0.365,
+  "y": 0.5094,
   "shape": "dpad",
   "label": ""
  },
@@ -162,8 +170,8 @@
   "kind": "axis",
   "gc": "Left Thumbstick",
   "gcDir": "up",
-  "x": 0.247,
-  "y": 0.2938,
+  "x": 0.2478,
+  "y": 0.291,
   "shape": "stick",
   "label": ""
  },
@@ -174,8 +182,8 @@
   "kind": "axis",
   "gc": "Left Thumbstick",
   "gcDir": "right",
-  "x": 0.247,
-  "y": 0.2938,
+  "x": 0.2478,
+  "y": 0.291,
   "shape": "stick",
   "label": ""
  },
@@ -186,8 +194,8 @@
   "kind": "axis",
   "gc": "Right Thumbstick",
   "gcDir": "up",
-  "x": 0.618,
-  "y": 0.5,
+  "x": 0.6209,
+  "y": 0.5006,
   "shape": "stick",
   "label": ""
  },
@@ -198,8 +206,8 @@
   "kind": "axis",
   "gc": "Right Thumbstick",
   "gcDir": "right",
-  "x": 0.618,
-  "y": 0.5,
+  "x": 0.6209,
+  "y": 0.5006,
   "shape": "stick",
   "label": ""
  },
@@ -209,8 +217,8 @@
   "ident": "button.home",
   "kind": "system",
   "gc": "Home Button",
-  "x": 0.492,
-  "y": 0.2061,
+  "x": 0.4946,
+  "y": 0.2141,
   "shape": "circle",
   "label": ""
  },

@@ -23,6 +23,7 @@ struct DeviceSpec: Codable {
 struct ControlSpec: Codable, Identifiable, Hashable {
   var id: String; var prompt: String; var ident: String; var kind: String   // button | axis | hat | system
   var gc: String; var gcDir: String?; var x: Double; var y: Double; var shape: String; var label: String
+  var ax: Double? = nil; var ay: Double? = nil      // callout anchor on the art, when the label sits outside it
   var isMappable: Bool { kind != "system" }
 }
 
