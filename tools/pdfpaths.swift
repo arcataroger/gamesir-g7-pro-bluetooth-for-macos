@@ -3,7 +3,7 @@
 import Foundation
 import CoreGraphics
 
-struct GState { var ctm = CGAffineTransform.identity; var lineWidth: CGFloat = 1; var dashed = false }
+struct GState { var ctm = CGAffineTransform.identity; var lineWidth: CGFloat = 1; var dashed = false; var strokeLight: CGFloat = 0; var fillLight: CGFloat = 0 }
 final class Extractor {
   var stack: [GState] = []; var g = GState()
   var path = "" ; var pathBox = CGRect.null; var start = CGPoint.zero; var cur = CGPoint.zero
@@ -11,6 +11,7 @@ final class Extractor {
   var counts: [String: Int] = [:]
   var union = CGRect.null
   var circles: [String] = []
+  var stubs: [String] = []
   init(crop: CGRect) { self.crop = crop }
   func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x, y: y).applying(g.ctm) }
   func f(_ v: CGFloat) -> String { String(format: "%.2f", v) }
@@ -23,14 +24,9 @@ final class Extractor {
     defer { path = ""; pathBox = .null }
     guard !path.isEmpty, crop.intersects(pathBox) else { return }
     if stroke && g.dashed && !fill { counts["dashed-skipped", default: 0] += 1; return }
-    if fill && !stroke && max(pathBox.width, pathBox.height) < 1.2 { counts["dot-skipped", default: 0] += 1; return }
-    // leftover callout stubs: a single short straight segment
-    if stroke && !fill && !path.contains("C") && path.components(separatedBy: "L").count == 2 && max(pathBox.width, pathBox.height) < 2.5 { counts["stub-skipped", default: 0] += 1; return }
-    // circle candidates: closed, near-square bbox, plausible button size
-    let ar = pathBox.width / max(pathBox.height, 0.001)
-    if path.contains("Z") && ar > 0.85 && ar < 1.18 && pathBox.width > 0.6 && pathBox.width < 7 {
-      circles.append(String(format: "{\"cx\": %.3f, \"cy\": %.3f, \"d\": %.3f}", (pathBox.midX - crop.minX) / crop.width, (crop.maxY - pathBox.midY) / crop.height, pathBox.width))
-    }
+    // Product art is black; callouts, leader lines and dots are grey. Keep only (near-)black paint.
+    let light = fill ? g.fillLight : g.strokeLight
+    if light > 0.25 { counts["grey-skipped", default: 0] += 1; return }
     let scale = sqrt(abs(g.ctm.a * g.ctm.d - g.ctm.b * g.ctm.c))
     let w = max(0.3, g.lineWidth * scale)
     var attrs = ""
@@ -47,12 +43,28 @@ var csStack: [CGPDFContentStreamRef] = []
 func num(_ s: CGPDFScannerRef) -> CGFloat { var v: CGPDFReal = 0; CGPDFScannerPopNumber(s, &v); return CGFloat(v) }
 func nums(_ s: CGPDFScannerRef, _ n: Int) -> [CGFloat] { var a: [CGFloat] = []; for _ in 0..<n { a.insert(num(s), at: 0) }; return a }
 
+func lightFromStack(_ s: CGPDFScannerRef) -> CGFloat? {
+  var vals: [CGFloat] = []
+  while true { var v: CGPDFReal = 0; if CGPDFScannerPopNumber(s, &v) { vals.insert(CGFloat(v), at: 0) } else { break } }
+  switch vals.count { case 1: return vals[0]; case 3: return (vals[0] + vals[1] + vals[2]) / 3; case 4: return max(0, 1 - vals[3] - (vals[0] + vals[1] + vals[2]) / 3); default: return nil }
+}
 func scan(_ cs: CGPDFContentStreamRef) {
   let table = CGPDFOperatorTableCreate()!
   CGPDFOperatorTableSetCallback(table, "q") { _, _ in X.stack.append(X.g) }
   CGPDFOperatorTableSetCallback(table, "Q") { _, _ in if let s = X.stack.popLast() { X.g = s } }
   CGPDFOperatorTableSetCallback(table, "cm") { s, _ in let v = nums(s, 6); X.g.ctm = CGAffineTransform(a: v[0], b: v[1], c: v[2], d: v[3], tx: v[4], ty: v[5]).concatenating(X.g.ctm) }
   CGPDFOperatorTableSetCallback(table, "w") { s, _ in X.g.lineWidth = num(s) }
+  CGPDFOperatorTableSetCallback(table, "G")  { s, _ in X.g.strokeLight = num(s) }
+  CGPDFOperatorTableSetCallback(table, "g")  { s, _ in X.g.fillLight = num(s) }
+  CGPDFOperatorTableSetCallback(table, "RG") { s, _ in let v = nums(s, 3); X.g.strokeLight = (v[0] + v[1] + v[2]) / 3 }
+  CGPDFOperatorTableSetCallback(table, "rg") { s, _ in let v = nums(s, 3); X.g.fillLight = (v[0] + v[1] + v[2]) / 3 }
+  CGPDFOperatorTableSetCallback(table, "K")  { s, _ in let v = nums(s, 4); X.g.strokeLight = max(0, 1 - v[3] - (v[0] + v[1] + v[2]) / 3) }
+  CGPDFOperatorTableSetCallback(table, "k")  { s, _ in let v = nums(s, 4); X.g.fillLight = max(0, 1 - v[3] - (v[0] + v[1] + v[2]) / 3) }
+  // sc/scn/SC/SCN: numeric operands only (1 = gray, 3 = rgb, 4 = cmyk); named (spot) colours pop as non-numbers and are left as-is
+  CGPDFOperatorTableSetCallback(table, "SC")  { s, _ in X.g.strokeLight = lightFromStack(s) ?? X.g.strokeLight }
+  CGPDFOperatorTableSetCallback(table, "SCN") { s, _ in X.g.strokeLight = lightFromStack(s) ?? X.g.strokeLight }
+  CGPDFOperatorTableSetCallback(table, "sc")  { s, _ in X.g.fillLight = lightFromStack(s) ?? X.g.fillLight }
+  CGPDFOperatorTableSetCallback(table, "scn") { s, _ in X.g.fillLight = lightFromStack(s) ?? X.g.fillLight }
   CGPDFOperatorTableSetCallback(table, "d") { s, _ in _ = num(s); var arr: CGPDFArrayRef?; if CGPDFScannerPopArray(s, &arr), let a = arr { X.g.dashed = CGPDFArrayGetCount(a) > 0 } else { X.g.dashed = false } }
   CGPDFOperatorTableSetCallback(table, "m") { s, _ in let v = nums(s, 2); X.move(X.pt(v[0], v[1])) }
   CGPDFOperatorTableSetCallback(table, "l") { s, _ in let v = nums(s, 2); X.line(X.pt(v[0], v[1])) }
@@ -113,4 +125,4 @@ let svg = """
 """
 try! svg.write(toFile: a[7], atomically: true, encoding: .utf8)
 print("paths:", X.counts, "-> \(a[7])"); print("content bbox (PDF pts):", X.union)
-print("circles (normalized cx, cy in viewBox; d = diameter pt):"); X.circles.forEach { print("  " + $0) }
+

@@ -419,7 +419,7 @@ struct ControllerView: View {
               Text(text).font(.system(size: max(9, d * 0.42), weight: .bold)).foregroundStyle(st.text)
             }
           }
-          .frame(width: d * (c.shape == "wide" ? 2.2 : c.shape == "pill" ? 1.6 : 1), height: d)
+          .frame(width: d * (c.shape == "wide" ? 2.2 : c.shape == "pill" ? 1.6 : c.shape == "bumper" ? 5.2 : c.shape == "trigger" ? 2.6 : 1), height: d)
           .position(x: c.x * w, y: c.y * h)
           .contentShape(Rectangle())
           .onTapGesture { onClick(sibs.first { $0.isMappable }?.id ?? c.id) }
@@ -430,18 +430,18 @@ struct ControllerView: View {
   }
   private func arrow(_ d: String) -> String { ["up": "↑", "down": "↓", "left": "←", "right": "→"][d] ?? d }
   private func diameter(_ shape: String, _ w: CGFloat) -> CGFloat {
-    switch shape { case "stick": return w * 0.135; case "dpad": return w * 0.14; case "small", "circle-sm": return w * 0.05; case "pill": return w * 0.04; case "wide": return w * 0.045; default: return w * 0.065 }
+    switch shape { case "stick": return w * 0.135; case "dpad": return w * 0.14; case "small", "circle-sm": return w * 0.05; case "pill": return w * 0.04; case "wide": return w * 0.045; case "bumper": return w * 0.038; case "trigger": return w * 0.032; default: return w * 0.065 }
   }
   private func shape(_ s: String) -> AnyShape {
-    switch s { case "small", "wide": return AnyShape(RoundedRectangle(cornerRadius: 8)); case "pill": return AnyShape(Capsule()); default: return AnyShape(Circle()) }
+    switch s { case "small", "wide": return AnyShape(RoundedRectangle(cornerRadius: 8)); case "pill", "bumper", "trigger": return AnyShape(Capsule()); default: return AnyShape(Circle()) }
   }
   private struct S { var fill: Color; var stroke: Color; var width: CGFloat; var text: Color }
   private func stateFor(_ sibs: [ControlSpec]) -> S {
     let ids = Set(sibs.map { $0.id })
-    if let t = target, ids.contains(t) { return S(fill: .accentColor.opacity(0.75), stroke: .accentColor, width: 3, text: .white) }
-    if let l = lit, ids.contains(l) { return S(fill: .yellow.opacity(0.7), stroke: .orange, width: 3, text: .black) }
-    if !ids.isDisjoint(with: Set(bad.keys)) { return S(fill: .red.opacity(0.55), stroke: .red, width: 2, text: .white) }
-    if !ids.isDisjoint(with: ok) { return S(fill: .green.opacity(0.55), stroke: .green, width: 2, text: .white) }
+    if let t = target, ids.contains(t) { return S(fill: .accentColor.opacity(0.45), stroke: .accentColor, width: 3, text: .white) }
+    if let l = lit, ids.contains(l) { return S(fill: .yellow.opacity(0.45), stroke: .orange, width: 3, text: .primary) }
+    if !ids.isDisjoint(with: Set(bad.keys)) { return S(fill: .red.opacity(0.4), stroke: .red, width: 2, text: .white) }
+    if !ids.isDisjoint(with: ok) { return S(fill: .green.opacity(0.4), stroke: .green, width: 2, text: .white) }
     if !ids.isDisjoint(with: captured) { return S(fill: .green.opacity(0.18), stroke: .green.opacity(0.7), width: 1.5, text: .primary) }
     if sibs.allSatisfy({ !$0.isMappable }) { return S(fill: .clear, stroke: .gray.opacity(0.35), width: 1, text: .secondary) }
     return S(fill: .clear, stroke: .gray.opacity(0.6), width: 1, text: .primary)
