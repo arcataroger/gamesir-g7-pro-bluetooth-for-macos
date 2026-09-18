@@ -232,16 +232,5 @@
   "y": 0.3275,
   "shape": "pill",
   "label": ""
- },
- {
-  "id": "m",
-  "prompt": "M (modifier)",
-  "ident": "",
-  "kind": "system",
-  "gc": "",
-  "x": 0.492,
-  "y": 0.605,
-  "shape": "pill",
-  "label": ""
  }
 ]

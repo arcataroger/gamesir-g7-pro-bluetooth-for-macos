@@ -36,8 +36,7 @@ final class Wizard: ObservableObject {
   @Published var installing = false
   @Published var installed = false
   @Published var verify = VerifyState()
-  @Published var verifyLit: String? = nil        // control macOS just delivered, during Verify
-  @Published var verifyLitDir: String? = nil     // its direction for pads/sticks (up/down/left/right)
+  @Published var verifyHeld: [String: String?] = [:]   // controls macOS is currently delivering (Verify), with direction for pads/sticks
   @Published var verifySeen = false
   @Published var lastFrameworkText = ""
   @Published var errorText: String? = nil
@@ -76,8 +75,8 @@ final class Wizard: ObservableObject {
     FrameworkObserver.shared.onConnection = { [weak self] on in self?.frameworkSeesPad = on; self?.advanceIfDone() }
     FrameworkObserver.shared.onElement = { [weak self] name, dir in self?.frameworkEvent(name, dir) }
     FrameworkObserver.shared.onRelease = { [weak self] name in
-      guard let self, self.step == .verify, let lit = self.verifyLit, let c = self.controls.first(where: { $0.id == lit }), c.gc == name else { return }
-      self.verifyLit = nil; self.verifyLitDir = nil
+      guard let self, self.step == .verify else { return }
+      for (id, _) in self.verifyHeld where self.controls.first(where: { $0.id == id })?.gc == name { self.verifyHeld.removeValue(forKey: id) }
     }
     FrameworkObserver.shared.start()
     // Developer convenience: `G7ProSetup --step capture` jumps straight to a step (permission must already be granted).
@@ -152,11 +151,11 @@ final class Wizard: ObservableObject {
   private func rawEvent(_ ev: RawEvent) {
     if step == .verify {
       if ev.usagePage == 12 && ev.usage == 0x223 {          // AC Home = Xbox button
-        if ev.value != 0 { verifyLit = "home"; verifyLitDir = nil; lastFrameworkText = "Xbox button. macOS keeps this as the system button (it opens the Game Overlay); games don't receive it." }
-        else if verifyLit == "home" { verifyLit = nil }
+        if ev.value != 0 { verifyHeld["home"] = nil as String?; lastFrameworkText = "Xbox button. macOS keeps this as the system button (it opens the Game Overlay); games don't receive it." }
+        else { verifyHeld.removeValue(forKey: "home") }
       } else if ev.usagePage == 7 && ev.usage == 0x46 {     // keyboard PrintScreen = Share
-        if ev.value != 0 { verifyLit = "share"; verifyLitDir = nil; lastFrameworkText = "Share. The pad sends this as a keyboard keystroke, not a gamepad button, so games don't see it." }
-        else if verifyLit == "share" { verifyLit = nil }
+        if ev.value != 0 { verifyHeld["share"] = nil as String?; lastFrameworkText = "Share. The pad sends this as a keyboard keystroke, not a gamepad button, so games don't see it." }
+        else { verifyHeld.removeValue(forKey: "share") }
       }
     }
     if let other = ev.describeOther, ev.value != 0 { lastRawText = other }
@@ -227,14 +226,25 @@ final class Wizard: ObservableObject {
   }
 
   // MARK: verify
-  func beginVerify() { verify = VerifyState(); step = .verify }
+  func beginVerify() { verify = VerifyState(); verifyHeld = [:]; step = .verify }
+  var verifyStatusText: String {
+    let held = verifyHeld.keys.compactMap { id -> String? in
+      guard let c = controls.first(where: { $0.id == id }) else { return nil }
+      let base = c.prompt.components(separatedBy: " (").first ?? c.prompt
+      if let d = verifyHeld[id] ?? nil { return base.replacingOccurrences(of: " UP", with: "").replacingOccurrences(of: " RIGHT", with: "") + " \(d)" }
+      return base
+    }.sorted()
+    if !held.isEmpty { return "macOS sees: " + held.joined(separator: " + ") }
+    if lastFrameworkText.contains(".") { return lastFrameworkText }
+    return lastFrameworkText.isEmpty ? "Waiting for a press…" : "Released."
+  }
   private func frameworkEvent(_ name: String, _ dir: String?) {
     lastFrameworkText = dir.map { "\(name) \($0)" } ?? name
     guard step == .verify else { return }
     verifySeen = true
     // which control did macOS deliver? match the framework element name (and direction for pads/sticks)
     let hit = controls.first { c in c.gc == name && (c.gcDir == nil || c.gcDir == dir) } ?? controls.first { $0.gc == name }
-    verifyLit = hit?.id; verifyLitDir = dir     // stays lit until the framework reports the release
+    if let h = hit { for (id, _) in verifyHeld where controls.first(where: { $0.id == id })?.gc == name { verifyHeld.removeValue(forKey: id) }; verifyHeld[h.id] = dir }
   }
 }
 
@@ -339,7 +349,7 @@ struct Status: View {
 struct HeroPad: View {
   let lit: Bool
   var body: some View {
-    ControllerView(target: nil, lit: nil, captured: [], ok: [], bad: [:], showTargets: false) { _ in }
+    ControllerView(target: nil, captured: [], ok: [], bad: [:], showTargets: false) { _ in }
       .opacity(lit ? 1 : 0.28)
       .animation(.easeOut(duration: 0.6), value: lit)
       .frame(maxWidth: 720)
@@ -410,15 +420,18 @@ struct CaptureView: View {
   var body: some View {
     Page(wiz.current.map { "Press \($0.prompt)" } ?? "All captured", wiz.current != nil ? "\(wiz.currentIndex + 1) of \(wiz.mappable.count). Press once, then let go." : nil) {
       VStack(alignment: .leading, spacing: 16) {
-        ControllerView(target: wiz.current?.id, lit: nil, captured: Set(wiz.captures.map { $0.controlID }), ok: [], bad: [:], showTargets: true) { wiz.recapture($0) }
+        ControllerView(target: wiz.current?.id, captured: Set(wiz.captures.map { $0.controlID }), ok: [], bad: [:], showTargets: true) { wiz.recapture($0) }
           .frame(maxWidth: 900)
-        HStack(spacing: 10) {
-          Button("Undo last") { wiz.undo() }.disabled(!wiz.canUndo)
-          Button("Start over") { wiz.beginCapture() }
-          Spacer()
-          Text("Click any control in the picture to capture it again. ⌘Z undoes.").font(.system(size: 15)).foregroundStyle(.secondary)
-        }.controlSize(.large)
-        Text(wiz.lastRawText.isEmpty ? " " : "Pad sent: \(wiz.lastRawText)").font(.system(size: 14, design: .monospaced)).foregroundStyle(.tertiary)
+        VStack(alignment: .leading, spacing: 8) {
+          HStack(spacing: 10) {
+            Button("Undo last") { wiz.undo() }.disabled(!wiz.canUndo)
+            Button("Start over") { wiz.beginCapture() }
+            Spacer()
+            Text("Click any control in the picture to capture it again. ⌘Z undoes.").font(.system(size: 15)).foregroundStyle(.secondary)
+          }.controlSize(.large)
+          Text("The back buttons (L4, R4, L5, R5) mirror other buttons, so they aren't captured here. They can only be reassigned in GameSir's own software, Windows only for now.").font(.system(size: 15)).foregroundStyle(.secondary).frame(maxWidth: 900, alignment: .leading)
+          Text(wiz.lastRawText.isEmpty ? " " : "Pad sent: \(wiz.lastRawText)").font(.system(size: 14, design: .monospaced)).foregroundStyle(.tertiary).lineLimit(1)
+        }.frame(height: 110, alignment: .topLeading)
       }
     } footer: { Nav(back: { wiz.back(.detect) }) }
   }
@@ -468,13 +481,13 @@ struct VerifyView: View {
   var body: some View {
     Page("Try it out", "Press anything on the pad. The control macOS delivers to apps lights up, so you can check every button reads the way it should.") {
       VStack(alignment: .leading, spacing: 16) {
-        ControllerView(target: nil, lit: wiz.verifyLit, litDir: wiz.verifyLitDir, captured: [], ok: [], bad: [:], showTargets: true) { _ in }
+        ControllerView(target: nil, lit: wiz.verifyHeld, captured: [], ok: [], bad: [:], showTargets: true) { _ in }
           .frame(maxWidth: 900)
-        HStack(spacing: 18) {
-          Text(wiz.lastFrameworkText.isEmpty ? "Waiting for a press…" : (wiz.lastFrameworkText.contains(".") ? wiz.lastFrameworkText : "macOS saw: \(wiz.lastFrameworkText)")).font(.system(size: 20, weight: .semibold)).frame(maxWidth: 900, alignment: .leading)
+        VStack(alignment: .leading, spacing: 8) {
+          Text(wiz.verifyStatusText).font(.system(size: 20, weight: .semibold)).lineLimit(2).frame(maxWidth: 900, alignment: .leading)
           if !wiz.frameworkSeesPad { Status(.warn, "macOS isn't reporting the pad as a game controller right now.") }
-        }
-        Text("If something lights up in the wrong place, go back to Capture and press that control again. The Xbox and Share buttons and M are handled by macOS or the pad itself and never reach games.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 900, alignment: .leading)
+          Text("If something lights up in the wrong place, go back to Capture and press that control again. The Xbox and Share buttons are handled by macOS and never reach games. The back buttons (L4, R4, L5, R5) mirror other buttons and can only be reassigned in GameSir's own software, Windows only for now.").font(.system(size: 15)).foregroundStyle(.secondary).frame(maxWidth: 900, alignment: .leading)
+        }.frame(height: 130, alignment: .topLeading)
       }
     } footer: {
       HStack { Button("Back") { wiz.back(.install) }; Button("Capture again") { wiz.autoAdvance = false; wiz.step = .capture }; Spacer(); Button("Next") { wiz.step = .done }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent) }.controlSize(.large)
@@ -538,7 +551,7 @@ struct GlyphShape: Shape {
 
 struct ControllerView: View {
   @EnvironmentObject var wiz: Wizard
-  let target: String?; let lit: String?; var litDir: String? = nil; let captured: Set<String>; let ok: Set<String>; let bad: [String: String]
+  let target: String?; var lit: [String: String?] = [:]; let captured: Set<String>; let ok: Set<String>; let bad: [String: String]
   var showTargets = true
   let onClick: (String) -> Void
   @Environment(\.colorScheme) private var scheme
@@ -584,13 +597,14 @@ struct ControllerView: View {
           }
           ForEach(bases) { c in
             let sibs = siblings(c), st = stateFor(sibs)
-            let dir = sibs.first { $0.id == target }?.gcDir ?? (sibs.contains { $0.id == lit } ? (litDir ?? sibs.first { $0.id == lit }?.gcDir) : nil)
+            let litSib = sibs.first { lit.keys.contains($0.id) }
+            let dir = sibs.first { $0.id == target }?.gcDir ?? litSib.flatMap { (lit[$0.id] ?? nil) ?? $0.gcDir }
             let d = diameter(c.shape, w), isTarget = sibs.contains { $0.id == target }
             let glyph = c.shape == "callout" ? Glyphs.all[c.id] : nil
             let shp: AnyShape = glyph.map { AnyShape(GlyphShape(glyph: $0)) } ?? shape(c.shape)
             let fw = glyph.map { _ in c.id.hasSuffix("t") ? w * 0.07 : w * 0.11 } ?? d * widthFactor(c.shape)
             let fh = glyph.map { fw * CGFloat($0.aspect) } ?? d
-            let active = isTarget || sibs.contains { $0.id == lit }
+            let active = isTarget || litSib != nil
             let vec: CGPoint? = dir.map { ["up": CGPoint(x: 0, y: -1), "down": CGPoint(x: 0, y: 1), "left": CGPoint(x: -1, y: 0), "right": CGPoint(x: 1, y: 0)][$0] ?? .zero }
             ZStack {
               if let v = vec, active {
@@ -648,7 +662,7 @@ struct ControllerView: View {
     let ids = Set(sibs.map { $0.id })
     let bg = scheme == .dark ? Color.black : Color.white
     if let t = target, ids.contains(t) { return S(fill: .accentColor.opacity(0.45), stroke: .accentColor, width: 2.5, text: .white) }
-    if let l = lit, ids.contains(l) {
+    if !ids.isDisjoint(with: Set(lit.keys)) {
       if sibs.allSatisfy({ !$0.isMappable }) { return S(fill: .secondary.opacity(0.35), stroke: .secondary, width: 2, text: .primary) }
       return S(fill: .accentColor.opacity(0.45), stroke: .accentColor, width: 2.5, text: .white)
     }
