@@ -727,7 +727,7 @@ struct ControlTarget: View {
       .frame(width: r, height: r).scaleEffect(isTarget ? 1 + 0.12 * pulse : 1)
       .offset(x: v.x * off, y: v.y * off)
       Image(systemName: "arrow.up").font(.system(size: max(12, d * 0.3), weight: .bold)).foregroundStyle(Color.accentColor)
-        .rotationEffect(.radians(atan2(v.y, v.x) + .pi / 2))
+        .rotationEffect(.radians(atan2(v.y, v.x) + Double.pi / 2))
         .offset(x: v.x * reach, y: v.y * reach)
       if held != nil && isStick {
         Text("\(Int((mag * 100).rounded()))%").font(.system(size: max(11, d * 0.2), weight: .semibold, design: .rounded)).foregroundStyle(.primary).fixedSize()
@@ -795,7 +795,7 @@ struct ControllerView: View {
   var body: some View {
     TimelineView(.animation(minimumInterval: 1.0 / 30)) { tl in
       let t = tl.date.timeIntervalSinceReferenceDate
-      body(pulse: (sin(t * 2 * .pi / 1.4) + 1) / 2, ripple: (t / 1.4).truncatingRemainder(dividingBy: 1))
+      body(pulse: (sin(t * 2 * Double.pi / 1.4) + 1) / 2, ripple: (t / 1.4).truncatingRemainder(dividingBy: 1))
     }
     .aspectRatio(1 / (artAspect + topInset), contentMode: .fit)
   }

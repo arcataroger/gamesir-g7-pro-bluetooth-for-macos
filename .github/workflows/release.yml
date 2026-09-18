@@ -10,6 +10,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      - name: Toolchain
+        run: swift --version
       - name: Build app
         run: ./build-app.sh
       # Notarization hook: when APPLE_ID, APPLE_TEAM_ID, APPLE_APP_PASSWORD and a Developer ID certificate are added
