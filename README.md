@@ -98,7 +98,7 @@ data/controls.json        the controls the wizard walks through, with prompts, p
                           expected framework elements, and drawing positions
 data/controller-front.svg the pad's front view, extracted from the vector art in GameSir's manual
                           (tools/pdfpaths.swift walks the PDF content stream with CoreGraphics and
-                          drops the dashed callout lines)
+                          keeps only the black product art, dropping the grey callouts)
 personality/…plist        the personality template (derived from Apple's GameSir X3 entry)
 src/Core.swift            headless logic: raw HID, framework observer, the index rule, capture → personality
 src/Install.swift         database patching, daemon restart (runs as root)
@@ -150,5 +150,5 @@ built app carries no quarantine flag, so Gatekeeper does not object to it.
 ## License
 
 MIT. Apple's personality format and the X3 mapping this derives from belong to Apple; this repo ships a
-derived data file for interoperability. The controller line art is extracted from GameSir's own product
-manual and remains GameSir's; it is used here to identify the product's controls.
+derived data file for interoperability. The controller line art and wordmark are extracted from GameSir's own
+product manual and remain GameSir's; they are used here to identify the product and its controls.

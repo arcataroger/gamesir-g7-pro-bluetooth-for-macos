@@ -6,7 +6,7 @@
   "kind": "button",
   "gc": "A Button",
   "x": 0.742,
-  "y": 0.397,
+  "y": 0.3824,
   "shape": "circle",
   "label": ""
  },
@@ -17,7 +17,7 @@
   "kind": "button",
   "gc": "B Button",
   "x": 0.807,
-  "y": 0.302,
+  "y": 0.2909,
   "shape": "circle",
   "label": ""
  },
@@ -28,7 +28,7 @@
   "kind": "button",
   "gc": "X Button",
   "x": 0.677,
-  "y": 0.302,
+  "y": 0.2909,
   "shape": "circle",
   "label": ""
  },
@@ -39,7 +39,7 @@
   "kind": "button",
   "gc": "Y Button",
   "x": 0.742,
-  "y": 0.21,
+  "y": 0.2023,
   "shape": "circle",
   "label": ""
  },
@@ -50,7 +50,7 @@
   "kind": "button",
   "gc": "L1 Button",
   "x": 0.275,
-  "y": 0.062,
+  "y": 0.0597,
   "shape": "bumper",
   "label": "LB"
  },
@@ -61,7 +61,7 @@
   "kind": "button",
   "gc": "R1 Button",
   "x": 0.725,
-  "y": 0.062,
+  "y": 0.0597,
   "shape": "bumper",
   "label": "RB"
  },
@@ -72,7 +72,7 @@
   "kind": "button",
   "gc": "L2 Button",
   "x": 0.195,
-  "y": 0.022,
+  "y": 0.0212,
   "shape": "trigger",
   "label": "LT"
  },
@@ -83,7 +83,7 @@
   "kind": "button",
   "gc": "R2 Button",
   "x": 0.805,
-  "y": 0.022,
+  "y": 0.0212,
   "shape": "trigger",
   "label": "RT"
  },
@@ -94,7 +94,7 @@
   "kind": "button",
   "gc": "Left Thumbstick Button",
   "x": 0.247,
-  "y": 0.305,
+  "y": 0.2938,
   "shape": "stick",
   "label": "L3"
  },
@@ -105,7 +105,7 @@
   "kind": "button",
   "gc": "Right Thumbstick Button",
   "x": 0.618,
-  "y": 0.519,
+  "y": 0.5,
   "shape": "stick",
   "label": "R3"
  },
@@ -116,7 +116,7 @@
   "kind": "button",
   "gc": "Options Button",
   "x": 0.378,
-  "y": 0.178,
+  "y": 0.1715,
   "shape": "circle-sm",
   "label": ""
  },
@@ -127,7 +127,7 @@
   "kind": "button",
   "gc": "Menu Button",
   "x": 0.594,
-  "y": 0.178,
+  "y": 0.1715,
   "shape": "circle-sm",
   "label": ""
  },
@@ -139,7 +139,7 @@
   "gc": "Direction Pad",
   "gcDir": "up",
   "x": 0.366,
-  "y": 0.527,
+  "y": 0.5077,
   "shape": "dpad",
   "label": ""
  },
@@ -151,7 +151,7 @@
   "gc": "Direction Pad",
   "gcDir": "right",
   "x": 0.366,
-  "y": 0.527,
+  "y": 0.5077,
   "shape": "dpad",
   "label": ""
  },
@@ -163,7 +163,7 @@
   "gc": "Left Thumbstick",
   "gcDir": "up",
   "x": 0.247,
-  "y": 0.305,
+  "y": 0.2938,
   "shape": "stick",
   "label": ""
  },
@@ -175,7 +175,7 @@
   "gc": "Left Thumbstick",
   "gcDir": "right",
   "x": 0.247,
-  "y": 0.305,
+  "y": 0.2938,
   "shape": "stick",
   "label": ""
  },
@@ -187,7 +187,7 @@
   "gc": "Right Thumbstick",
   "gcDir": "up",
   "x": 0.618,
-  "y": 0.519,
+  "y": 0.5,
   "shape": "stick",
   "label": ""
  },
@@ -199,7 +199,7 @@
   "gc": "Right Thumbstick",
   "gcDir": "right",
   "x": 0.618,
-  "y": 0.519,
+  "y": 0.5,
   "shape": "stick",
   "label": ""
  },
@@ -210,7 +210,7 @@
   "kind": "system",
   "gc": "Home Button",
   "x": 0.492,
-  "y": 0.214,
+  "y": 0.2061,
   "shape": "circle",
   "label": ""
  },
@@ -221,7 +221,7 @@
   "kind": "system",
   "gc": "Share Button",
   "x": 0.492,
-  "y": 0.34,
+  "y": 0.3275,
   "shape": "pill",
   "label": ""
  },
@@ -232,7 +232,7 @@
   "kind": "system",
   "gc": "",
   "x": 0.492,
-  "y": 0.628,
+  "y": 0.605,
   "shape": "pill",
   "label": ""
  }
