@@ -58,6 +58,7 @@ final class Wizard: ObservableObject {
   var cliURL: URL { Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/g7pro") }
   private var lastRawControlID: String? = nil
   private var lastRawAt = Date.distantPast
+  private var rawActive: [UInt32: Bool] = [:]     // per HID element: was it active at the last report? (edge detection)
 
   init() {
     // Resources live in the app bundle, or (when run straight from the build directory) in the repo.
@@ -177,13 +178,22 @@ final class Wizard: ObservableObject {
        PressDetector.matches(ev, kind: controls.first { $0.id == cap.controlID }?.kind ?? "") {
       litControl = cap.controlID; lastRawControlID = cap.controlID; lastRawAt = Date()
     }
-    guard step == .capture, let c = current, PressDetector.matches(ev, kind: c.kind) else { return }
+    // Edge detection: a control counts only when it goes from rest to active, so a held trigger, stick or button
+    // can't satisfy the next prompt with its continuing stream of reports.
+    let activeNow = PressDetector.matches(ev, kind: c_kindFor(ev))
+    let wasActive = rawActive[ev.cookie] ?? false
+    rawActive[ev.cookie] = activeNow
+    guard step == .capture, let c = current, activeNow, !wasActive, PressDetector.matches(ev, kind: c.kind) else { return }
     if c.kind == "axis" && axisDir(ev.value) != expectedAxisDir(c) { return }   // wrong direction on the right axis: ignore
     if c.kind == "hat" && hatDir(ev.value) != hatDir(for: c.id) { return }
     captures.removeAll { $0.controlID == c.id }
     captures.append(Capture(controlID: c.id, usageType: ev.usageType, cookie: ev.cookie, usagePage: ev.usagePage, usage: ev.usage, reportID: ev.reportID))
     litControl = c.id
     advance()
+  }
+  /// The kind an element belongs to, for rest/active tracking regardless of what is being prompted.
+  private func c_kindFor(_ ev: RawEvent) -> String {
+    switch ev.usageType { case 1: return "button"; case 3: return "hat"; case 2: return ev.usagePage == 2 ? "trigger" : "axis"; default: return "" }
   }
   private func advance() {
     var i = currentIndex + 1
