@@ -33,5 +33,8 @@ cat > "$APP/Contents/Info.plist" <<PL
 PL
 echo "==> Signing (ad hoc)"
 codesign --force --deep --sign - "$APP"
+# An ad-hoc signature changes every build, which silently invalidates a previous Input Monitoring grant
+# (the toggle stays on in System Settings but no longer matches). Clear it so the next launch prompts cleanly.
+tccutil reset ListenEvent com.arcataroger.g7pro-bluetooth-setup >/dev/null 2>&1 || true
 echo "Built: $APP"
 echo "CLI:   $HERE/build/g7pro  (symlink into the app)"

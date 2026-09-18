@@ -246,20 +246,23 @@ struct WelcomeView: View {
 
 struct PermissionView: View {
   @EnvironmentObject var wiz: Wizard
+  private let poll = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
       Text("Allow this app to read the controller").font(.title2)
-      Text("Reading the pad's raw button stream needs the Input Monitoring permission. macOS will ask; if it doesn't, the Settings pane opens so you can add this app yourself. Nothing is recorded except which button you press during the wizard.")
-      HStack {
-        Button("Request permission") { wiz.requestPermission() }
-        Button("Open Input Monitoring settings") { SystemState.openInputMonitoringSettings() }
-        Button("Re-check") { wiz.refreshPermission() }
+      Text("Reading the pad's raw button stream needs macOS's Input Monitoring permission. Nothing is recorded except which control you press during the wizard.")
+      if wiz.inputMonitoring {
+        Label("Input Monitoring granted", systemImage: "checkmark.circle").foregroundStyle(.green)
+      } else {
+        Button("Allow Input Monitoring…") { wiz.requestPermission() }.keyboardShortcut(.defaultAction)
+        Label("Not granted yet", systemImage: "xmark.circle").foregroundStyle(.red)
+        Text("macOS asks the first time. If it doesn't, the Input Monitoring pane opens: turn on the switch next to this app and this page updates by itself.").font(.callout).foregroundStyle(.secondary)
       }
-      Label(wiz.inputMonitoring ? "Granted" : "Not granted yet", systemImage: wiz.inputMonitoring ? "checkmark.circle" : "xmark.circle").foregroundStyle(wiz.inputMonitoring ? .green : .red)
-      Text("If you granted it in Settings but it still says not granted, quit and reopen the app.").font(.callout).foregroundStyle(.secondary)
       Spacer()
       Nav(back: { wiz.step = .welcome }, next: { wiz.startHID(); wiz.step = .detect }, nextEnabled: wiz.inputMonitoring)
-    }.onAppear { wiz.refreshPermission() }
+    }
+    .onAppear { wiz.refreshPermission() }
+    .onReceive(poll) { _ in if !wiz.inputMonitoring { wiz.refreshPermission() } }
   }
 }
 
