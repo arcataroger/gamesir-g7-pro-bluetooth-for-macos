@@ -37,6 +37,7 @@ final class Wizard: ObservableObject {
   @Published var installed = false
   @Published var verify = VerifyState()
   @Published var verifyLit: String? = nil        // control macOS just delivered, during Verify
+  @Published var verifyLitDir: String? = nil     // its direction for pads/sticks (up/down/left/right)
   @Published var verifySeen = false
   @Published var lastFrameworkText = ""
   @Published var errorText: String? = nil
@@ -220,8 +221,8 @@ final class Wizard: ObservableObject {
     verifySeen = true
     // which control did macOS deliver? match the framework element name (and direction for pads/sticks)
     let hit = controls.first { c in c.gc == name && (c.gcDir == nil || c.gcDir == dir) } ?? controls.first { $0.gc == name }
-    verifyLit = hit?.id
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in if self?.verifyLit == hit?.id { self?.verifyLit = nil } }
+    verifyLit = hit?.id; verifyLitDir = dir
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in if self?.verifyLit == hit?.id { self?.verifyLit = nil; self?.verifyLitDir = nil } }
   }
 }
 
@@ -455,7 +456,7 @@ struct VerifyView: View {
   var body: some View {
     Page("Try it out", "Press anything on the pad. The control macOS delivers to apps lights up, so you can check every button reads the way it should.") {
       VStack(alignment: .leading, spacing: 16) {
-        ControllerView(target: nil, lit: wiz.verifyLit, captured: [], ok: [], bad: [:], showTargets: true) { _ in }
+        ControllerView(target: nil, lit: wiz.verifyLit, litDir: wiz.verifyLitDir, captured: [], ok: [], bad: [:], showTargets: true) { _ in }
           .frame(maxWidth: 900)
         HStack(spacing: 18) {
           Text(wiz.lastFrameworkText.isEmpty ? "Waiting for a press…" : "macOS saw: \(wiz.lastFrameworkText)").font(.system(size: 20, weight: .semibold))
@@ -525,7 +526,7 @@ struct GlyphShape: Shape {
 
 struct ControllerView: View {
   @EnvironmentObject var wiz: Wizard
-  let target: String?; let lit: String?; let captured: Set<String>; let ok: Set<String>; let bad: [String: String]
+  let target: String?; let lit: String?; var litDir: String? = nil; let captured: Set<String>; let ok: Set<String>; let bad: [String: String]
   var showTargets = true
   let onClick: (String) -> Void
   @Environment(\.colorScheme) private var scheme
@@ -571,7 +572,7 @@ struct ControllerView: View {
           }
           ForEach(bases) { c in
             let sibs = siblings(c), st = stateFor(sibs)
-            let dir = sibs.first { $0.id == target }?.gcDir ?? sibs.first { $0.id == lit }?.gcDir
+            let dir = sibs.first { $0.id == target }?.gcDir ?? (sibs.contains { $0.id == lit } ? (litDir ?? sibs.first { $0.id == lit }?.gcDir) : nil)
             let d = diameter(c.shape, w), isTarget = sibs.contains { $0.id == target }
             let glyph = c.shape == "callout" ? Glyphs.all[c.id] : nil
             let shp: AnyShape = glyph.map { AnyShape(GlyphShape(glyph: $0)) } ?? shape(c.shape)
@@ -603,11 +604,11 @@ struct ControllerView: View {
                 shp.fill(st.fill)
                 shp.stroke(st.stroke, lineWidth: st.width)
               }
-              if vec == nil || !active {
-                if st.check { Image(systemName: "checkmark").font(.system(size: max(9, min(fw, fh) * 0.45), weight: .bold)).foregroundStyle(st.text) }
-                else if glyph == nil, !c.label.isEmpty {
-                  Text(c.label).font(.system(size: max(9, d * (c.shape == "stick" || c.shape == "dpad" ? 0.26 : 0.42)), weight: .bold)).foregroundStyle(st.text)
-                }
+              if vec != nil && active {
+                if glyph == nil, !c.label.isEmpty { Text(c.label).font(.system(size: max(9, d * 0.26), weight: .bold)).foregroundStyle(.primary) }
+              } else if st.check { Image(systemName: "checkmark").font(.system(size: max(9, min(fw, fh) * 0.45), weight: .bold)).foregroundStyle(st.text) }
+              else if glyph == nil, !c.label.isEmpty {
+                Text(c.label).font(.system(size: max(9, d * (c.shape == "stick" || c.shape == "dpad" ? 0.26 : 0.42)), weight: .bold)).foregroundStyle(st.text)
               }
             }
             .overlay(alignment: .top) { if glyph != nil { Text(c.label).font(.system(size: max(10, w * 0.019), weight: .bold)).foregroundStyle(.secondary).offset(y: -w * 0.03) } }
