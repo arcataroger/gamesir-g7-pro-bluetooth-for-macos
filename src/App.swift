@@ -75,6 +75,10 @@ final class Wizard: ObservableObject {
     Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in self?.refreshSystem() }
     FrameworkObserver.shared.onConnection = { [weak self] on in self?.frameworkSeesPad = on; self?.advanceIfDone() }
     FrameworkObserver.shared.onElement = { [weak self] name, dir in self?.frameworkEvent(name, dir) }
+    FrameworkObserver.shared.onRelease = { [weak self] name in
+      guard let self, self.step == .verify, let lit = self.verifyLit, let c = self.controls.first(where: { $0.id == lit }), c.gc == name else { return }
+      self.verifyLit = nil; self.verifyLitDir = nil
+    }
     FrameworkObserver.shared.start()
     // Developer convenience: `G7ProSetup --step capture` jumps straight to a step (permission must already be granted).
     if let i = CommandLine.arguments.firstIndex(of: "--step"), i + 1 < CommandLine.arguments.count,
@@ -221,8 +225,7 @@ final class Wizard: ObservableObject {
     verifySeen = true
     // which control did macOS deliver? match the framework element name (and direction for pads/sticks)
     let hit = controls.first { c in c.gc == name && (c.gcDir == nil || c.gcDir == dir) } ?? controls.first { $0.gc == name }
-    verifyLit = hit?.id; verifyLitDir = dir
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in if self?.verifyLit == hit?.id { self?.verifyLit = nil; self?.verifyLitDir = nil } }
+    verifyLit = hit?.id; verifyLitDir = dir     // stays lit until the framework reports the release
   }
 }
 

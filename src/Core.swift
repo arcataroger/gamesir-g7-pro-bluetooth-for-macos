@@ -180,7 +180,8 @@ enum PersonalityWriter {
 
 final class FrameworkObserver {
   static let shared = FrameworkObserver()
-  var onElement: ((String, String?) -> Void)?      // (localized element name, direction for pads/sticks)
+  var onElement: ((String, String?) -> Void)?      // (localized element name, direction for pads/sticks) on press/deflection
+  var onRelease: ((String) -> Void)?               // element name when a button is released or a pad/stick returns to centre
   var onConnection: ((Bool) -> Void)?
   private(set) var controller: GCController?
   private var token: NSObjectProtocol?, token2: NSObjectProtocol?
@@ -195,10 +196,12 @@ final class FrameworkObserver {
     guard let g = c.extendedGamepad else { return }
     controller = c
     g.valueChangedHandler = { [weak self] _, el in
-      if let b = el as? GCControllerButtonInput { if b.isPressed { self?.onElement?(b.localizedName ?? "button", nil) } }
-      else if let d = el as? GCControllerDirectionPad {
+      if let b = el as? GCControllerButtonInput {
+        if b.isPressed { self?.onElement?(b.localizedName ?? "button", nil) } else { self?.onRelease?(b.localizedName ?? "button") }
+      } else if let d = el as? GCControllerDirectionPad {
         let x = d.xAxis.value, y = d.yAxis.value
         if abs(x) > 0.6 || abs(y) > 0.6 { self?.onElement?(d.localizedName ?? "pad", y > 0.6 ? "up" : y < -0.6 ? "down" : x > 0.6 ? "right" : "left") }
+        else if abs(x) < 0.3 && abs(y) < 0.3 { self?.onRelease?(d.localizedName ?? "pad") }
       }
     }
     onConnection?(true)
