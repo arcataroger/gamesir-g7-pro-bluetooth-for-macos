@@ -11,6 +11,14 @@ swiftc -O -parse-as-library "$HERE/src/Core.swift" "$HERE/src/Install.swift" "$H
 swiftc -O "$HERE/src/Core.swift" "$HERE/src/Install.swift" "$HERE/src/main.swift" -o "$APP/Contents/MacOS/g7pro" 2>&1 | grep -v -E '^$|warning:' || true
 [ -x "$APP/Contents/MacOS/g7pro" ] || { echo "compile failed (cli)"; exit 1; }
 mkdir -p "$HERE/build"; ln -sf "$APP/Contents/MacOS/g7pro" "$HERE/build/g7pro"
+echo "==> Icon"
+ICONTOOL="$HERE/build/icon-render"; swiftc -O "$HERE/tools/icon.swift" -o "$ICONTOOL" 2>&1 | grep -v warning || true
+ICONSET="$HERE/build/AppIcon.iconset"; rm -rf "$ICONSET"; mkdir -p "$ICONSET"
+for sz in 16 32 128 256 512; do
+  "$ICONTOOL" "$ICONSET/icon_${sz}x${sz}.png" $sz >/dev/null
+  "$ICONTOOL" "$ICONSET/icon_${sz}x${sz}@2x.png" $((sz*2)) >/dev/null
+done
+iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
 echo "==> Bundling resources"
 cp -R "$HERE/data" "$HERE/personality" "$APP/Contents/Resources/"
 VERSION=$(git -C "$HERE" describe --tags --always 2>/dev/null || echo dev)
@@ -28,6 +36,7 @@ cat > "$APP/Contents/Info.plist" <<PL
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>LSApplicationCategoryType</key><string>public.app-category.utilities</string>
   <key>NSHighResolutionCapable</key><true/>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>NSHumanReadableCopyright</key><string>MIT License</string>
 </dict></plist>
 PL
