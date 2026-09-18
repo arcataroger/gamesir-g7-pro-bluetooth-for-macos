@@ -36,7 +36,8 @@ final class Wizard: ObservableObject {
   @Published var installing = false
   @Published var installed = false
   @Published var verify = VerifyState()
-  @Published var verifyHeld: [String: String?] = [:]   // controls macOS is currently delivering (Verify), with direction for pads/sticks
+  @Published var verifyHeld: [String: Held] = [:]   // controls macOS is currently delivering (Verify)
+  struct Held { var dir: String?; var value: Double = 1; var x: Double = 0; var y: Double = 0 }
   @Published var verifySeen = false
   @Published var lastFrameworkText = ""
   @Published var errorText: String? = nil
@@ -74,6 +75,10 @@ final class Wizard: ObservableObject {
     Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in self?.refreshSystem() }
     FrameworkObserver.shared.onConnection = { [weak self] on in self?.frameworkSeesPad = on; self?.advanceIfDone() }
     FrameworkObserver.shared.onElement = { [weak self] name, dir in self?.frameworkEvent(name, dir) }
+    FrameworkObserver.shared.onAnalog = { [weak self] name, value, x, y in
+      guard let self, self.step == .verify else { return }
+      for (id, h) in self.verifyHeld where self.controls.first(where: { $0.id == id })?.gc == name { self.verifyHeld[id] = Held(dir: h.dir, value: value, x: x, y: y) }
+    }
     FrameworkObserver.shared.onRelease = { [weak self] name in
       guard let self, self.step == .verify else { return }
       for (id, _) in self.verifyHeld where self.controls.first(where: { $0.id == id })?.gc == name { self.verifyHeld.removeValue(forKey: id) }
@@ -95,6 +100,8 @@ final class Wizard: ObservableObject {
     }
   }
   func back(_ to: Step) { autoAdvance = false; step = to }
+  /// Done for the rail: this step and every step before it are satisfied, so progress reads left to right.
+  func isDone(_ s: Step) -> Bool { Step.allCases.filter { $0.rawValue <= s.rawValue }.allSatisfy { isSatisfied($0) } }
   /// Whether a step's condition currently holds, independent of where the user is.
   func isSatisfied(_ s: Step) -> Bool {
     switch s {
@@ -125,8 +132,9 @@ final class Wizard: ObservableObject {
 
   // MARK: permission + HID
   func requestPermission() {
-    // Ask once. macOS shows its own prompt with an "Open System Settings" button. The grant only takes effect
-    // for a fresh process, so there is nothing to poll for afterwards.
+    // macOS shows its prompt once per process. Later clicks go straight to the Input Monitoring pane.
+    // The grant only takes effect for a fresh process, so there is nothing to poll for afterwards.
+    if permissionRequested { SystemState.openInputMonitoringSettings(); return }
     permissionRequested = true
     inputMonitoring = HIDSource.requestInputMonitoring()
     if inputMonitoring { startHID(); advanceIfDone() }
@@ -151,10 +159,10 @@ final class Wizard: ObservableObject {
   private func rawEvent(_ ev: RawEvent) {
     if step == .verify {
       if ev.usagePage == 12 && ev.usage == 0x223 {          // AC Home = Xbox button
-        if ev.value != 0 { verifyHeld["home"] = nil as String?; lastFrameworkText = "Xbox button. macOS keeps this as the system button (it opens the Game Overlay); games don't receive it." }
+        if ev.value != 0 { verifyHeld["home"] = Held(dir: nil); lastFrameworkText = "Xbox button. macOS keeps this as the system button (it opens the Game Overlay); games don't receive it." }
         else { verifyHeld.removeValue(forKey: "home") }
       } else if ev.usagePage == 7 && ev.usage == 0x46 {     // keyboard PrintScreen = Share
-        if ev.value != 0 { verifyHeld["share"] = nil as String?; lastFrameworkText = "Share. The pad sends this as a keyboard keystroke, not a gamepad button, so games don't see it." }
+        if ev.value != 0 { verifyHeld["share"] = Held(dir: nil); lastFrameworkText = "Share. The pad sends this as a keyboard keystroke, not a gamepad button, so games don't see it." }
         else { verifyHeld.removeValue(forKey: "share") }
       }
     }
@@ -231,8 +239,10 @@ final class Wizard: ObservableObject {
     let held = verifyHeld.keys.compactMap { id -> String? in
       guard let c = controls.first(where: { $0.id == id }) else { return nil }
       let base = c.prompt.components(separatedBy: " (").first ?? c.prompt
-      if let d = verifyHeld[id] ?? nil { return base.replacingOccurrences(of: " UP", with: "").replacingOccurrences(of: " RIGHT", with: "") + " \(d)" }
-      return base
+      let h = verifyHeld[id]!
+      let pct = c.kind == "axis" || c.id == "lt" || c.id == "rt" ? " \(Int((h.value * 100).rounded()))%" : ""
+      if let d = h.dir { return base.replacingOccurrences(of: " UP", with: "").replacingOccurrences(of: " RIGHT", with: "") + " \(d)" + pct }
+      return base + pct
     }.sorted()
     if !held.isEmpty { return "macOS sees: " + held.joined(separator: " + ") }
     if lastFrameworkText.contains(".") { return lastFrameworkText }
@@ -244,7 +254,9 @@ final class Wizard: ObservableObject {
     verifySeen = true
     // which control did macOS deliver? match the framework element name (and direction for pads/sticks)
     let hit = controls.first { c in c.gc == name && (c.gcDir == nil || c.gcDir == dir) } ?? controls.first { $0.gc == name }
-    if let h = hit { for (id, _) in verifyHeld where controls.first(where: { $0.id == id })?.gc == name { verifyHeld.removeValue(forKey: id) }; verifyHeld[h.id] = dir }
+    if let h = hit { let prev = verifyHeld.first { entry in controls.first(where: { $0.id == entry.key })?.gc == name }?.value
+      for (id, _) in verifyHeld where controls.first(where: { $0.id == id })?.gc == name { verifyHeld.removeValue(forKey: id) }
+      verifyHeld[h.id] = Held(dir: dir, value: prev?.value ?? 1, x: prev?.x ?? 0, y: prev?.y ?? 0) }
   }
 }
 
@@ -283,7 +295,7 @@ struct StepRail: View {
       Text("G7 Pro Bluetooth Setup").font(.system(size: 15, weight: .semibold)).foregroundStyle(.secondary)
         .padding(.horizontal, 24).padding(.top, 28).padding(.bottom, 18)
       ForEach(Step.allCases, id: \.rawValue) { s in
-        let done = wiz.isSatisfied(s), current = s == wiz.step
+        let done = wiz.isDone(s), current = s == wiz.step
         HStack(spacing: 12) {
           ZStack {
             Circle().fill(current ? Color.accentColor : (done ? Color.green : Color.clear)).frame(width: 22, height: 22)
@@ -386,8 +398,8 @@ struct PermissionView: View {
         if wiz.inputMonitoring { Status(.ok, "Input Monitoring is allowed. You can continue.") }
         else if wiz.permissionRequested {
           Status(.wait, "Waiting for you to turn it on.")
-          Text("In macOS's prompt choose Open System Settings, turn on the switch next to this app, then quit and reopen this app. It will continue from here.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 560, alignment: .leading)
-          Button("Allow Input Monitoring…") { wiz.requestPermission() }.buttonStyle(.borderedProminent).controlSize(.large)
+          Text("Turn on the switch next to this app in System Settings › Privacy & Security › Input Monitoring, then quit and reopen this app. It will continue from here.").font(.system(size: 16)).foregroundStyle(.secondary).frame(maxWidth: 560, alignment: .leading)
+          Button("Open Input Monitoring settings…") { wiz.requestPermission() }.buttonStyle(.borderedProminent).controlSize(.large)
         } else {
           Button("Ask again") { wiz.requestPermission() }.controlSize(.large)
         }
@@ -551,7 +563,7 @@ struct GlyphShape: Shape {
 
 struct ControllerView: View {
   @EnvironmentObject var wiz: Wizard
-  let target: String?; var lit: [String: String?] = [:]; let captured: Set<String>; let ok: Set<String>; let bad: [String: String]
+  let target: String?; var lit: [String: Wizard.Held] = [:]; let captured: Set<String>; let ok: Set<String>; let bad: [String: String]
   var showTargets = true
   let onClick: (String) -> Void
   @Environment(\.colorScheme) private var scheme
@@ -598,7 +610,8 @@ struct ControllerView: View {
           ForEach(bases) { c in
             let sibs = siblings(c), st = stateFor(sibs)
             let litSib = sibs.first { lit.keys.contains($0.id) }
-            let dir = sibs.first { $0.id == target }?.gcDir ?? litSib.flatMap { (lit[$0.id] ?? nil) ?? $0.gcDir }
+            let held = litSib.flatMap { lit[$0.id] }
+            let dir = sibs.first { $0.id == target }?.gcDir ?? litSib.flatMap { held?.dir ?? $0.gcDir }
             let d = diameter(c.shape, w), isTarget = sibs.contains { $0.id == target }
             let glyph = c.shape == "callout" ? Glyphs.all[c.id] : nil
             let shp: AnyShape = glyph.map { AnyShape(GlyphShape(glyph: $0)) } ?? shape(c.shape)
@@ -607,9 +620,12 @@ struct ControllerView: View {
             let active = isTarget || litSib != nil
             let vec: CGPoint? = dir.map { ["up": CGPoint(x: 0, y: -1), "down": CGPoint(x: 0, y: 1), "left": CGPoint(x: -1, y: 0), "right": CGPoint(x: 1, y: 0)][$0] ?? .zero }
             ZStack {
-              if let v = vec, active {
-                // a direction on a pad/stick: highlight just that edge, arrow beyond it; the base stays quiet
+              if let v0 = vec, active {
+                // a direction on a pad/stick: highlight just that edge; the base stays quiet.
+                // In Verify the arrow follows the real deflection and extends with it; a percentage shows the travel.
                 shp.stroke(Color.secondary.opacity(0.5), lineWidth: 1)
+                let isStick = c.shape == "stick", mag = held.map { isStick ? $0.value : 1 } ?? 1
+                let v = (held != nil && isStick && mag > 0.05) ? CGPoint(x: held!.x / max(mag, 0.001), y: -held!.y / max(mag, 0.001)) : v0
                 let r = d * 0.32, off = d * 0.34
                 Group {
                   if isTarget { Circle().stroke(Color.accentColor, lineWidth: 3).scaleEffect(1 + 0.8 * pulseRipple).opacity(1 - pulseRipple) }
@@ -618,8 +634,22 @@ struct ControllerView: View {
                 }
                 .frame(width: r, height: r).scaleEffect(isTarget ? 1 + 0.12 * pulse : 1)
                 .offset(x: v.x * off, y: v.y * off)
-                Text(arrow(dir!)).font(.system(size: max(12, d * 0.3), weight: .bold)).foregroundStyle(Color.accentColor)
-                  .offset(x: v.x * d * 0.72, y: v.y * d * 0.72)
+                let reach = d * (0.72 + (held != nil && isStick ? 0.6 * mag : 0))
+                Image(systemName: "arrow.up").font(.system(size: max(12, d * 0.3), weight: .bold)).foregroundStyle(Color.accentColor)
+                  .rotationEffect(.radians(atan2(v.y, v.x) + .pi / 2))
+                  .offset(x: v.x * reach, y: v.y * reach)
+                if held != nil && isStick {
+                  Text("\(Int((mag * 100).rounded()))%").font(.system(size: max(11, d * 0.2), weight: .semibold, design: .rounded)).foregroundStyle(.primary)
+                    .offset(x: v.x * (reach + d * 0.28), y: v.y * (reach + d * 0.28))
+                }
+              } else if let g = glyph, g.solid == true, let h = held, c.id.hasSuffix("t") {
+                // trigger travel: shade from the bottom up
+                shp.fill(Color.accentColor.opacity(0.18))
+                shp.fill(Color.accentColor.opacity(0.65))
+                  .mask(VStack(spacing: 0) { Spacer(minLength: 0); Rectangle().frame(height: fh * CGFloat(h.value)) })
+                shp.stroke(Color.accentColor, lineWidth: 2)
+                Text("\(Int((h.value * 100).rounded()))%").font(.system(size: max(11, w * 0.017), weight: .semibold, design: .rounded)).foregroundStyle(.primary)
+                  .offset(x: c.id == "lt" ? -fw * 0.95 : fw * 0.95)
               } else if let g = glyph, g.solid != true {
                 // line-art silhouettes: a capsule carries the state; the outline is a stroke on top
                 if isTarget { Capsule().stroke(Color.accentColor, lineWidth: 3).scaleEffect(1 + 0.5 * pulseRipple).opacity(1 - pulseRipple) }

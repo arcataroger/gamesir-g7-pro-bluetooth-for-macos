@@ -181,6 +181,7 @@ enum PersonalityWriter {
 final class FrameworkObserver {
   static let shared = FrameworkObserver()
   var onElement: ((String, String?) -> Void)?      // (localized element name, direction for pads/sticks) on press/deflection
+  var onAnalog: ((String, Double, Double, Double) -> Void)?   // (name, value 0…1, x, y) on every change, for travel display
   var onRelease: ((String) -> Void)?               // element name when a button is released or a pad/stick returns to centre
   var onConnection: ((Bool) -> Void)?
   private(set) var controller: GCController?
@@ -197,11 +198,13 @@ final class FrameworkObserver {
     controller = c
     g.valueChangedHandler = { [weak self] _, el in
       if let b = el as? GCControllerButtonInput {
-        if b.isPressed { self?.onElement?(b.localizedName ?? "button", nil) } else { self?.onRelease?(b.localizedName ?? "button") }
+        self?.onAnalog?(b.localizedName ?? "button", Double(b.value), 0, 0)
+        if b.isPressed || b.value > 0.02 { self?.onElement?(b.localizedName ?? "button", nil) } else { self?.onRelease?(b.localizedName ?? "button") }
       } else if let d = el as? GCControllerDirectionPad {
-        let x = d.xAxis.value, y = d.yAxis.value
-        if abs(x) > 0.6 || abs(y) > 0.6 { self?.onElement?(d.localizedName ?? "pad", y > 0.6 ? "up" : y < -0.6 ? "down" : x > 0.6 ? "right" : "left") }
-        else if abs(x) < 0.3 && abs(y) < 0.3 { self?.onRelease?(d.localizedName ?? "pad") }
+        let x = d.xAxis.value, y = d.yAxis.value, mag = min(1, sqrt(x * x + y * y))
+        self?.onAnalog?(d.localizedName ?? "pad", Double(mag), Double(x), Double(y))
+        if mag > 0.12 { self?.onElement?(d.localizedName ?? "pad", abs(y) >= abs(x) ? (y > 0 ? "up" : "down") : (x > 0 ? "right" : "left")) }
+        else { self?.onRelease?(d.localizedName ?? "pad") }
       }
     }
     onConnection?(true)
