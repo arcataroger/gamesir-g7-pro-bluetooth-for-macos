@@ -1,5 +1,23 @@
 # GameSir G7 Pro over Bluetooth on macOS
 
+> ## You do not need this app.
+>
+> The G7 Pro has an undocumented **real Xbox Bluetooth mode**. In that mode macOS pairs it as an
+> Xbox controller, with rumble and everything else, and no database hack is needed.
+> A Reddit user found it:
+> [r/Gamesir: "G7 Pro does not work on Mac OS"](https://www.reddit.com/r/Gamesir/comments/1o42rem/g7_pro_does_not_work_on_mac_os/o1c7u6r/).
+>
+> 1. Set the mode switch on the pad to Bluetooth.
+> 2. Hold the pairing button (bottom left of the pad) until the Xbox light blinks and swirls.
+>    macOS now lists the pad as a G7.
+> 3. Hold **B** and the **Xbox button** together for about five seconds. The Xbox light goes off
+>    for a second, then comes back on. macOS now lists the pad as an Xbox controller.
+> 4. Pair it in System Settings › Bluetooth like any Xbox controller. Vibration works.
+>
+> If the pad already pairs as an Xbox controller, stop here. Everything below is the long way round.
+> We keep the app and the write-up for the record: the database mechanism, the numbering rule, and
+> the tooling still apply to other pads that macOS ignores.
+
 This app makes the GameSir G7 Pro work as a real game controller on macOS over **Bluetooth**.
 After setup, the pad appears in System Settings › Game Controllers. Games that use Apple's
 GameController framework see it, including GeForce NOW, Apple Arcade, and Safari's Gamepad API.

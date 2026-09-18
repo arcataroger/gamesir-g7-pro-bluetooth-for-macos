@@ -12,6 +12,12 @@ Apply these to every reply, commit message, README change, and string in the UI:
 3. Write instructions as numbered imperative steps: one action per step, condition first.
 4. No hedges (may → can; should → must) and no filler.
 
+## Read this first
+
+The G7 Pro has a hidden real Xbox Bluetooth mode (hold B + Xbox for five seconds while in Bluetooth
+pairing). In that mode macOS needs none of this. The README's top notice explains it. Keep the notice
+first in the README. The project stays useful as a worked example and as tooling for other pads.
+
 ## What the project is
 
 macOS ignores the GameSir G7 Pro over Bluetooth because Apple's controller database does not list it.
