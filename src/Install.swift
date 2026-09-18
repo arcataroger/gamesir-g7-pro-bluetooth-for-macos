@@ -67,6 +67,13 @@ enum Database {
       let backup = backupDir.appendingPathComponent(stamp)
       try FileManager.default.createDirectory(at: backup, withIntermediateDirectories: true)
       try FileManager.default.copyItem(at: info, to: backup.appendingPathComponent("Info.plist"))
+      // We run as root; hand the backup back to the user whose folder this is (SUDO_UID, or the home folder's owner).
+      let ownerUID = ProcessInfo.processInfo.environment["SUDO_UID"].flatMap { UInt32($0) }
+        ?? (try? FileManager.default.attributesOfItem(atPath: backupDir.deletingLastPathComponent().deletingLastPathComponent().path)[.ownerAccountID] as? UInt32)
+      if let uid = ownerUID, let e = FileManager.default.enumerator(atPath: backupDir.path) {
+        try? FileManager.default.setAttributes([.ownerAccountID: uid], ofItemAtPath: backupDir.path)
+        for case let rel as String in e { try? FileManager.default.setAttributes([.ownerAccountID: uid], ofItemAtPath: backupDir.appendingPathComponent(rel).path) }
+      }
       let had = devices.contains { ($0["Identifier"] as? String) == device.identifier }
       devices.removeAll { ($0["Identifier"] as? String) == device.identifier }
       devices.append(["Identifier": device.identifier, "CompatibilityVersion": device.compatibilityVersion,
