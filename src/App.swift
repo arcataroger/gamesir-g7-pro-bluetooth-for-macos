@@ -38,6 +38,8 @@ final class Wizard: ObservableObject {
   @Published var verify = VerifyState()
   @Published var lastFrameworkText = ""
   @Published var errorText: String? = nil
+  @Published var autoAdvance = true          // cleared when the user navigates backwards by hand
+  @Published var entryInstalled = false      // the database already has an entry for this pad
 
   let device: DeviceSpec
   let controls: [ControlSpec]
@@ -65,14 +67,37 @@ final class Wizard: ObservableObject {
     workDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("G7Pro Bluetooth Setup")
     try? FileManager.default.createDirectory(at: workDir, withIntermediateDirectories: true)
     if controls.isEmpty { errorText = "Could not load data/controls.json next to the app. Reinstall the app." }
-    DispatchQueue.global().async { let s = SystemState.sipEnabled(); DispatchQueue.main.async { self.sipEnabled = s } }
-    FrameworkObserver.shared.onConnection = { [weak self] on in self?.frameworkSeesPad = on }
+    refreshSystem()
+    Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in self?.refreshSystem() }
+    FrameworkObserver.shared.onConnection = { [weak self] on in self?.frameworkSeesPad = on; self?.advanceIfDone() }
     FrameworkObserver.shared.onElement = { [weak self] name, dir in self?.frameworkEvent(name, dir) }
     FrameworkObserver.shared.start()
     // Developer convenience: `G7ProSetup --step capture` jumps straight to a step (permission must already be granted).
     if let i = CommandLine.arguments.firstIndex(of: "--step"), i + 1 < CommandLine.arguments.count,
        let s = Step.allCases.first(where: { $0.title.lowercased().hasPrefix(CommandLine.arguments[i + 1].lowercased()) }) {
-      refreshPermission(); step = s
+      autoAdvance = false; refreshPermission(); step = s
+    }
+  }
+
+  func refreshSystem() {
+    DispatchQueue.global().async {
+      let sip = SystemState.sipEnabled(), inst = Database.isInstalled(device: self.device)
+      DispatchQueue.main.async { self.sipEnabled = sip; self.entryInstalled = inst; self.advanceIfDone() }
+    }
+  }
+  func back(_ to: Step) { autoAdvance = false; step = to }
+  /// Called whenever something completes; moves forward past steps that are already satisfied.
+  func advanceIfDone() {
+    guard autoAdvance else { return }
+    switch step {
+    case .welcome: if sipEnabled == false { step = .permission; advanceIfDone() }
+    case .permission: if inputMonitoring { startHID(); step = .detect; advanceIfDone() }
+    case .detect:
+      if padConnected {
+        if entryInstalled && frameworkSeesPad && FileManager.default.fileExists(atPath: MappingFile.url(in: workDir).path) { beginVerify() }
+        else { beginCapture() }
+      }
+    default: break
     }
   }
 
@@ -82,10 +107,10 @@ final class Wizard: ObservableObject {
     if !inputMonitoring { SystemState.openInputMonitoringSettings() }
     refreshPermission()
   }
-  func refreshPermission() { inputMonitoring = HIDSource.hasInputMonitoring(); if inputMonitoring { startHID() } }
+  func refreshPermission() { inputMonitoring = HIDSource.hasInputMonitoring(); if inputMonitoring { startHID() }; advanceIfDone() }
   func startHID() {
     let src = HIDSource.shared
-    src.onDeviceChange = { [weak self] on in DispatchQueue.main.async { self?.padConnected = on; self?.firmware = src.firmwareVersion } }
+    src.onDeviceChange = { [weak self] on in DispatchQueue.main.async { self?.padConnected = on; self?.firmware = src.firmwareVersion; self?.advanceIfDone() } }
     src.onEvent = { [weak self] ev in self?.rawEvent(ev) }
     src.start(vendorID: device.vendorID, productID: device.productID)
     padConnected = src.device != nil; firmware = src.firmwareVersion
@@ -227,16 +252,19 @@ struct WelcomeView: View {
     VStack(alignment: .leading, spacing: 14) {
       Text("Make the \(wiz.device.name) work on macOS").font(.title)
       Text("macOS pairs this pad but no game sees it, because the pad is missing from Apple's controller database. This wizard captures how your pad's buttons are wired, builds the missing database entry, installs it, and verifies the result. Nothing runs in the background afterwards.")
-      GroupBox("Before you start: System Integrity Protection must be off during the install step") {
-        VStack(alignment: .leading, spacing: 6) {
-          switch wiz.sipEnabled {
-          case .some(false): Label("SIP is currently disabled. You can go through the whole wizard.", systemImage: "checkmark.circle").foregroundStyle(.green)
-          case .some(true):
-            Label("SIP is enabled. You can capture and review now, but the install step will be blocked.", systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
-          case .none: Text("Could not read SIP status.")
-          }
-          Text("To disable it on Apple Silicon: shut down, hold the power button until “Loading startup options”, choose Options › Continue, then Utilities › Terminal and run:  csrutil disable  — then restart. (Intel: restart holding Cmd-R.) You will turn it back on at the end with  csrutil enable.").font(.callout).foregroundStyle(.secondary)
-        }.frame(maxWidth: .infinity, alignment: .leading).padding(4)
+      switch wiz.sipEnabled {
+      case .some(false):
+        Label("System Integrity Protection is off, as the install step needs.", systemImage: "checkmark.circle").foregroundStyle(.green)
+      case .some(true):
+        GroupBox("First, turn off System Integrity Protection (only for the install step)") {
+          VStack(alignment: .leading, spacing: 8) {
+            Label("SIP is on. The database this wizard edits is write-protected while it is.", systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
+            Text("Apple Silicon: shut down, hold the power button until “Loading startup options”, choose Options › Continue, then Utilities › Terminal and run:")
+            Text("csrutil disable").font(.body.monospaced())
+            Text("Restart, then open this app again; it will notice. Intel Macs: restart holding Cmd-R instead. At the end you turn it back on the same way with csrutil enable.").foregroundStyle(.secondary)
+          }.frame(maxWidth: .infinity, alignment: .leading).padding(4)
+        }
+      case .none: Text("Could not read SIP status.")
       }
       Spacer()
       Nav(next: { wiz.step = .permission })
@@ -259,7 +287,7 @@ struct PermissionView: View {
         Text("macOS asks the first time. If it doesn't, the Input Monitoring pane opens: turn on the switch next to this app and this page updates by itself.").font(.callout).foregroundStyle(.secondary)
       }
       Spacer()
-      Nav(back: { wiz.step = .welcome }, next: { wiz.startHID(); wiz.step = .detect }, nextEnabled: wiz.inputMonitoring)
+      Nav(back: { wiz.back(.welcome) }, next: { wiz.startHID(); wiz.step = .detect }, nextEnabled: wiz.inputMonitoring)
     }
     .onAppear { wiz.refreshPermission() }
     .onReceive(poll) { _ in if !wiz.inputMonitoring { wiz.refreshPermission() } }
@@ -271,11 +299,11 @@ struct DetectView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
       Text("Connect the pad over Bluetooth").font(.title2)
-      Text("Set the pad's mode switch to Bluetooth, power it on, and pair it in System Settings › Bluetooth if you haven't. The light should be solid, not blinking.")
+      if !wiz.padConnected { Text("Set the pad's mode switch to Bluetooth, power it on, and pair it in System Settings › Bluetooth if you haven't. The light should be solid, not blinking.") }
       Label(wiz.padConnected ? "Pad found (firmware version \(wiz.firmware ?? 0))" : "Waiting for the pad…", systemImage: wiz.padConnected ? "gamecontroller.fill" : "gamecontroller").foregroundStyle(wiz.padConnected ? .green : .secondary)
       Label(wiz.frameworkSeesPad ? "macOS already treats it as a game controller (an entry is installed). You can re-capture to fix the mapping, or skip to Verify." : "macOS does not treat it as a game controller yet (expected before install).", systemImage: wiz.frameworkSeesPad ? "checkmark.circle" : "info.circle").foregroundStyle(.secondary)
       Spacer()
-      HStack { Button("Back") { wiz.step = .permission }; Spacer()
+      HStack { Button("Back") { wiz.back(.permission) }; Spacer()
         if wiz.frameworkSeesPad { Button("Skip to Verify") { wiz.beginVerify() } }
         Button("Start capture") { wiz.beginCapture() }.keyboardShortcut(.defaultAction).disabled(!wiz.padConnected) }
     }
@@ -296,7 +324,7 @@ struct CaptureView: View {
         Divider()
         Text("Last raw event: \(wiz.lastRawText)").font(.caption.monospaced()).foregroundStyle(.secondary)
         Spacer()
-        Nav(back: { wiz.step = .detect })
+        Nav(back: { wiz.back(.detect) })
       }.frame(width: 300)
       ControllerView(target: wiz.current?.id, lit: wiz.litControl, captured: Set(wiz.captures.map { $0.controlID }), ok: [], bad: [:]) { wiz.recapture($0) }
     }
@@ -312,7 +340,7 @@ struct ReviewView: View {
       List { ForEach(wiz.indexTable, id: \.0) { row in HStack { Text(row.0).frame(width: 220, alignment: .leading); Text(row.1).font(.caption.monospaced()) } } }
       Text(wiz.changes.isEmpty ? "No differences from the bundled personality." : "\(wiz.changes.count) predicate(s) differ from the bundled personality.").font(.callout)
       Text("Written to \(wiz.personalityURL.path)").font(.caption).foregroundStyle(.secondary)
-      Nav(back: { wiz.currentIndex = max(0, wiz.mappable.count - 1); wiz.step = .capture }, next: { wiz.step = .install }, nextTitle: "Install")
+      Nav(back: { wiz.autoAdvance = false; wiz.currentIndex = max(0, wiz.mappable.count - 1); wiz.step = .capture }, next: { wiz.step = .install }, nextTitle: "Install")
     }
   }
 }
@@ -322,18 +350,19 @@ struct InstallView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
       Text("Install into Apple's controller database").font(.title2)
-      Text("This writes the entry and personality into the GameControllers-Custom bundle and restarts the controller daemon. macOS will ask for an administrator password.")
-      switch wiz.sipEnabled {
-      case .some(true): Label("SIP is enabled, so the write will be refused. Disable it from Recovery (see the Welcome step) and come back; your capture is saved.", systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
-      case .some(false): Label("SIP is disabled. Ready to install.", systemImage: "checkmark.circle").foregroundStyle(.green)
-      case .none: Text("SIP status unknown.")
+      if wiz.installed {
+        Label("Installed. The database entry and mapping are in place.", systemImage: "checkmark.circle").foregroundStyle(.green)
+      } else {
+        Text("This writes the entry and mapping into Apple's controller database and restarts the controller daemon. macOS will ask for an administrator password.")
+        if wiz.sipEnabled == true {
+          Label("SIP is on, so the write would be refused. Disable it from Recovery (the Welcome step explains how) and reopen the app; your capture is saved.", systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
+        }
       }
-      HStack { Button(wiz.installing ? "Installing…" : (wiz.installed ? "Install again" : "Install")) { wiz.install() }.disabled(wiz.installing || wiz.sipEnabled == true)
-        Button("Re-check SIP") { wiz.sipEnabled = SystemState.sipEnabled() } }
-      ScrollView { Text(wiz.installOutput).font(.caption.monospaced()).frame(maxWidth: .infinity, alignment: .leading) }.frame(minHeight: 120).background(Color.gray.opacity(0.08))
-      if wiz.installed { Label(wiz.frameworkSeesPad ? "macOS now reports the pad as a game controller." : "Installed. Waiting for macOS to pick the pad up…", systemImage: wiz.frameworkSeesPad ? "checkmark.circle" : "clock").foregroundStyle(wiz.frameworkSeesPad ? .green : .secondary) }
+      Button(wiz.installing ? "Installing…" : (wiz.installed ? "Install again" : "Install")) { wiz.install() }.disabled(wiz.installing || wiz.sipEnabled == true).keyboardShortcut(wiz.installed ? nil : .defaultAction)
+      if !wiz.installOutput.isEmpty { ScrollView { Text(wiz.installOutput).font(.caption.monospaced()).frame(maxWidth: .infinity, alignment: .leading) }.frame(maxHeight: 140).background(Color.gray.opacity(0.08)) }
+      if wiz.installed { Label(wiz.frameworkSeesPad ? "macOS now reports the pad as a game controller." : "Waiting for macOS to pick the pad up…", systemImage: wiz.frameworkSeesPad ? "checkmark.circle" : "clock").foregroundStyle(wiz.frameworkSeesPad ? .green : .secondary) }
       Spacer()
-      Nav(back: { wiz.step = .review }, next: { wiz.beginVerify() }, nextTitle: "Verify", nextEnabled: wiz.installed || wiz.frameworkSeesPad)
+      Nav(back: { wiz.back(.review) }, next: { wiz.beginVerify() }, nextTitle: "Verify", nextEnabled: wiz.installed || wiz.frameworkSeesPad)
     }
   }
 }
@@ -352,7 +381,7 @@ struct VerifyView: View {
         Text("Last raw: \(wiz.lastRawText)").font(.caption.monospaced()).foregroundStyle(.secondary)
         if !wiz.frameworkSeesPad { Label("macOS is not reporting the pad as a game controller right now.", systemImage: "exclamationmark.triangle").foregroundStyle(.orange) }
         Spacer()
-        HStack { Button("Back") { wiz.step = .install }; Button("Re-capture a control") { wiz.step = .capture }; Spacer(); Button("Finish") { wiz.step = .done }.keyboardShortcut(.defaultAction) }
+        HStack { Button("Back") { wiz.back(.install) }; Button("Re-capture a control") { wiz.step = .capture }; Spacer(); Button("Finish") { wiz.step = .done }.keyboardShortcut(.defaultAction) }
       }.frame(width: 320)
       ControllerView(target: nil, lit: wiz.litControl, captured: [], ok: wiz.verify.ok, bad: wiz.verify.bad) { _ in }
     }
@@ -365,8 +394,16 @@ struct DoneView: View {
     VStack(alignment: .leading, spacing: 14) {
       Text("Done").font(.title)
       Text("The pad should now appear in System Settings › General › Game Controllers and work in games that use Apple's GameController framework, including GeForce NOW.")
-      GroupBox("Turn System Integrity Protection back on") {
-        Text("Restart into Recovery the same way as before, open Utilities › Terminal, run  csrutil enable  and restart. The installed files stay in place.").frame(maxWidth: .infinity, alignment: .leading).padding(4)
+      if wiz.sipEnabled == true {
+        Label("System Integrity Protection is back on.", systemImage: "checkmark.circle").foregroundStyle(.green)
+      } else {
+        GroupBox("Last step: turn System Integrity Protection back on") {
+          VStack(alignment: .leading, spacing: 8) {
+            Text("Restart into Recovery the same way as before, open Utilities › Terminal, and run:")
+            Text("csrutil enable").font(.body.monospaced())
+            Text("Then restart. The installed files stay in place.").foregroundStyle(.secondary)
+          }.frame(maxWidth: .infinity, alignment: .leading).padding(4)
+        }
       }
       Text("If a macOS update replaces Apple's controller database, or you update the pad's firmware, run this wizard again. Your capture is saved in \(wiz.workDir.path).").font(.callout).foregroundStyle(.secondary)
       HStack { Button("Uninstall (remove the entry)") { wiz.uninstall() }.disabled(wiz.installing || wiz.sipEnabled == true); Spacer(); Button("Quit") { NSApp.terminate(nil) }.keyboardShortcut(.defaultAction) }
